@@ -33,9 +33,13 @@ CATALOG_DIR = Path(os.getenv("CATALOG_DIR", FRONTEND_DIR / "db"))
 
 
 def ensure_catalog() -> None:
-    """Собирает каталог только при первом запуске или после очистки .sqlite."""
+    """Пересобирает каталог после обновления его исходных данных из Git."""
     required = (CATALOG_DIR / "music.sqlite", CATALOG_DIR / "templates.sqlite")
-    if all(path.is_file() for path in required):
+    sources = [FRONTEND_DIR / "db" / "build.py"]
+    sources += list((FRONTEND_DIR / "db" / "seeds").rglob("*"))
+    sources += list((FRONTEND_DIR / "db" / "schema").rglob("*"))
+    newest_source = max(path.stat().st_mtime for path in sources if path.is_file())
+    if all(path.is_file() for path in required) and min(path.stat().st_mtime for path in required) >= newest_source:
         return
     if build_catalog(CATALOG_DIR):
         raise RuntimeError("Не удалось собрать каталог материалов из db/seeds")
