@@ -31,6 +31,7 @@ class ApiTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         main.storage = FileStorage(Path(self.temp.name))
+        main._requests.clear()
         self.client = TestClient(main.app)
 
     def tearDown(self) -> None:
@@ -87,6 +88,13 @@ class ApiTest(unittest.TestCase):
     def test_rejects_svg_disguised_as_image(self) -> None:
         response = self.client.post("/api/assets", files={"file": ("unsafe.png", b"<svg></svg>", "image/png")})
         self.assertEqual(response.status_code, 415)
+
+    def test_rate_limit_returns_429(self) -> None:
+        for _ in range(120):
+            self.assertEqual(self.client.get("/api/health").status_code, 200)
+        response = self.client.get("/api/health")
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.json()["detail"], "Слишком много запросов. Повторите позднее.")
 
 
 if __name__ == "__main__":
