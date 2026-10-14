@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .files import validate_upload
@@ -39,7 +39,7 @@ async def rate_limit(request: Request, call_next):
     while timestamps and timestamps[0] <= now - 60:
         timestamps.popleft()
     if len(timestamps) >= 120:
-        raise HTTPException(status_code=429, detail="Слишком много запросов. Повторите позднее.")
+        return JSONResponse(status_code=429, content={"detail": "Слишком много запросов. Повторите позднее."})
     timestamps.append(now)
     return await call_next(request)
 
