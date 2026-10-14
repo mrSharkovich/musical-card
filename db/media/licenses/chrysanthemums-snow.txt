@@ -1,0 +1,14 @@
+Подтверждение лицензии изображения
+
+Изображение: Flowers in snow 2022 G4 (розовые хризантемы под снегом)
+Автор:       George Chernilevsky (собственная работа, «own work»)
+Источник:    https://commons.wikimedia.org/wiki/File:Flowers_in_snow_2022_G4.jpg
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        backgrounds/chrysanthemums-snow.jpg — уменьшенная копия 960×640
+             (оригинал 6000×4000, пропорции совпадают); других изменений нет
+SHA-256:     e528c05deaf00ce088a97b49db86e96fe5dad30bd99c38d784e4233306e0a16e
+
+Скриншоты страницы файла, присланные командой 2026-10-14:
+   chrysanthemums-snow-license.png — раздел «Лицензирование»: CC BY 4.0, «Я, правообладатель данного произведения…»
+   chrysanthemums-snow-history.png — «File history»: загрузил George Chernilevsky, own work, 6000×4000

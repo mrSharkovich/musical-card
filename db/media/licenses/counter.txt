@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        Counter
+Автор:       jaspertine
+Источник:    https://ccmixter.org/files/jaspertine/70129
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/counter.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     b2c66df412175d3d693014d37ab19841be8fe8641c59763f331415480cd1da58
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2025 jaspertine Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/jaspertine/70129
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - инструментальный рок / шугейз; чужих сэмплов не указано.
+
+TODO: добавить рядом скриншот страницы трека (counter.png).

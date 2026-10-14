@@ -1,0 +1,15 @@
+Подтверждение лицензии изображения
+
+Изображение: Welcome с цветными лентами
+Автор:       не указан в файле
+Источник:    Openclipart (https://openclipart.org) — точная страница не сохранилась
+Лицензия:    CC0 1.0 (Public Domain Dedication) — https://creativecommons.org/publicdomain/zero/1.0/
+Файл:        backgrounds/welcome-stripes.png (800×575), без изменений
+SHA-256:     129ded04724fc5f1392f26263b3de411b44c4a912f6bee8e04405e2b592ba768
+
+Основание: лицензия записана в метаданных самого PNG-файла (Inkscape / Openclipart):
+   Copyright: CC0 Public Domain Dedication http://creativecommons.org/publicdomain/zero/1.0/
+   Software:  www.inkscape.org
+
+Проверено 2026-10-14 по метаданным файла. CC0 не требует указывать автора.
+Ссылку на страницу можно найти поиском по картинке (Яндекс Картинки или Google Lens) и дописать сюда.

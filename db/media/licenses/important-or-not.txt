@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        importantornot
+Автор:       martinsea, вокал Integer_astoria
+Источник:    https://ccmixter.org/files/softmartin/71264
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/important-or-not.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     c46efbfb20f49949d5a19398ffdbaadf4627155a36b1bd45766dfa8375048e78
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2026 martinsea Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/softmartin/71264
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - электронный ремикс на синтезаторах, 100 BPM, есть вокал (Integer_astoria); сэмпл — трек Integer_astoria.
+
+TODO: добавить рядом скриншот страницы трека (important-or-not.png).

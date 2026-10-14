@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        Morning
+Автор:       MalreDeszik
+Источник:    https://ccmixter.org/files/MalreDeszik/70295
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/morning.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     0806fb56ed1aed4ef6ba307086036ebabc86b9ceaa99ae977e9335e42c0c129e
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2026 MalreDeszik Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/MalreDeszik/70295
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - жанр и наличие вокала на странице не указаны; чужих сэмплов не указано.
+
+TODO: добавить рядом скриншот страницы трека (morning.png).

@@ -1,0 +1,17 @@
+Подтверждение лицензии изображения
+
+Изображение: Bratislava New Year Fireworks (новогодний салют, Братислава, 2005)
+Автор:       Ondrejk (Wikimedia Commons)
+Источник:    https://commons.wikimedia.org/wiki/File:Bratislava_New_Year_Fireworks.jpg
+Лицензия:    общественное достояние (автор отказался от прав, «release this work into the public domain»)
+Файл:        backgrounds/fireworks-gold.jpg — уменьшенная копия 960×720
+             (оригинал 2592×1944, пропорции совпадают); других изменений нет
+SHA-256:     32b36d49293bd675fd1f4c8983a1b5956c042114c5f4a3383772ae4a63aa2227
+
+Текст раздела «Licensing» со страницы файла, присланный командой 2026-10-14:
+   I, the copyright holder of this work, release this work into the public domain.
+   This applies worldwide. In some countries this may not be legally possible; if so:
+   I grant anyone the right to use this work for any purpose, without any conditions,
+   unless such conditions are required by law.
+
+File history: 23:23, 21 March 2005 — 2,592 × 1,944 (2.19 MB) — Ondrejk — «Bratislava; New Year 2005; FireWorks»

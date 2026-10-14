@@ -1,0 +1,21 @@
+Подтверждение лицензии трека
+
+Трек:        Beautiful Piano - "Green Streaks in the Sky"
+Автор:       Matthew C. Wright (matthew_c_wright)
+Источник:    https://ccmixter.org/files/matthew_c_wright/71163
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/green-streaks-in-the-sky.mp3 (без изменений, как скачан с ccMixter)
+SHA-256:     425d75e3653f73555944d9670c332841efad5ff5a0eea75257e8c57742bc3fa0
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2026 matthew_c_wright Licensed to the public under https://creativecommons.org/licenses/by/4.0/
+   Verify at https://ccmixter.org/files/matthew_c_wright/71163
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия указана как CC BY 4.0;
+   - трек описан как оригинальная инструментальная фортепианная музыка (без вокала);
+   - чужих сэмплов в треке не указано.
+
+TODO: добавить рядом скриншот страницы трека (green-streaks-in-the-sky.png)
+и указать его в tracks.csv → license_proof_path.

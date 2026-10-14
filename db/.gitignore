@@ -1,0 +1,6 @@
+# Базы собираются из seeds/ командой python db/build.py
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+__pycache__/

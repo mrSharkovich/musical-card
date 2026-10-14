@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        jazzJam2
+Автор:       Admiral Bob, при участии mwic (сэмплы «JazzJam1»)
+Источник:    https://ccmixter.org/files/admiralbob77/71273
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/jazz-jam-2.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     03364a210fc3566db4a9e175e87f1e51262483e451c975a23a15c2f546d78b6d
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2026 Admiral Bob Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/admiralbob77/71273
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - фьюжн / фанк, 85 BPM; использует сэмплы «JazzJam1» (mwic); вокал на странице явно не указан.
+
+TODO: добавить рядом скриншот страницы трека (jazz-jam-2.png).

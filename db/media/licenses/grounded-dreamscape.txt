@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        Grounded Dreamscape
+Автор:       Ben Blohowiak, при участии spinningmerkaba
+Источник:    https://ccmixter.org/files/bblohowiak/68298
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/grounded-dreamscape.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     a6745e11bf2ae6e6ddb70a0628dbe0bb6bfbbbd4e08384daa76292e4d906a321
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2026 Ben Blohowiak Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/bblohowiak/68298
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - инструментальный экспериментальный гитарный ремикс; сэмпл «Outcast (Grounded Dreams Edition) Guitars» (spinningmerkaba).
+
+TODO: добавить рядом скриншот страницы трека (grounded-dreamscape.png).

@@ -1,0 +1,16 @@
+Подтверждение лицензии изображения
+
+Изображение: Nunspeet met Kerstverlichting — Nunspeet with X-mas Illumination 05
+             (старая ратуша в Нунспете, Нидерланды, с рождественской подсветкой)
+Автор:       не указан в присланном тексте — посмотреть на странице файла (поле Author)
+Источник:    https://commons.wikimedia.org/wiki/File:Nunspeet_met_Kerstverlichting_-_Nunspeet_with_X-mas_Illumination_05.jpg
+Лицензия:    Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+             https://creativecommons.org/licenses/by-sa/4.0/
+Файл:        backgrounds/nunspeet-christmas-lights.jpg — уменьшено с 2576×1932 до 1600×1200, JPEG 85%;
+             других изменений нет (уменьшение указано в подписи, как требует лицензия)
+SHA-256:     eab92493558e501fb962d4ec544bdaf53e87255dbfaf6037262cf6fa0a645426
+
+Текст раздела «Licensing» со страницы файла, присланный командой 2026-10-14:
+   This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+TODO: вписать имя автора в seeds/backgrounds.csv (author и attribution_text).
