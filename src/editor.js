@@ -1,5 +1,5 @@
 import {api,linkFor} from './api.js';
-import {newProject,applyTemplate,templates,melodies,formats,uid,esc,clamp} from './model.js';
+import {applyTemplate,applyCatalogTemplate,templates,melodies,backgrounds,stickers,formats,uid,esc,clamp} from './model.js';
 import {renderStage,scaleStage} from './stage.js';
 import {CardAudio} from './audio.js';
 import {$,$$,toast,modal,copy} from './ui.js';
@@ -64,6 +64,13 @@ export function mountEditor(root,token,p){
   function choose(id){selected=id;if(mobile)libraryOpen=false;renderCanvas();renderProps();if(tool==='layers')renderLibrary();}
   const add=e=>{const before=snapshot();p.elements.push(e);selected=e.id;if(mobile)libraryOpen=false;commit(before);render();};
   const base=(type,x=270,y=200,w=250,h=100)=>({id:uid(),type,x,y,w,h,rotate:0,opacity:1});
+  function replaceBackground(src){
+    p.elements=p.elements.filter(element=>!element.isBackground);
+    if(src)p.elements.unshift({...base('image',0,0,800,formats[p.format]),src,isBackground:true});
+  }
+  function setCanvasColor(color){
+    const before=snapshot();replaceBackground();p.bg=color;commit(before);render();
+  }
   function renderLibrary(){
     $$('.rail-btn',root).forEach(b=>b.classList.toggle('active',b.dataset.tool===tool));
     const heading=menu.find(m=>m[0]===tool)?.[1];
@@ -71,11 +78,11 @@ export function mountEditor(root,token,p){
     if(tool==='templates') html+=`<p class="muted">Выберите оформление. Элементы шаблона можно редактировать.</p><div class="thumb-grid">${templates.map(t=>`<button class="template-thumb" data-template="${t.id}"><span class="template-art" style="background:${t.bg}"><b>${t.decoration}</b><i>${t.id==='blank'?'':t.name}</i></span><small>${t.name}</small></button>`).join('')}</div>`;
     if(tool==='text')html+=`<button class="tile" data-add="title">Добавить заголовок</button><button class="tile" data-add="subtitle">Добавить подзаголовок</button><button class="tile" data-add="paragraph">Добавить текст</button><p class="muted">Готовые надписи</p>${['С Днём рождения!','Поздравляю!','С любовью ♡'].map(t=>`<button class="tile" data-text="${esc(t)}">${esc(t)}</button>`).join('')}`;
     if(tool==='images')html+=`<label class="btn primary upload-label">+ Загрузить фото / GIF<input hidden type="file" id="image-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple></label><p class="muted">JPG, PNG, WebP и GIF, до ${MAX_IMAGE_MB} МБ. Загружайте только материалы, на которые у вас есть права.</p><h3>Изображения проекта</h3><div id="asset-gallery" class="asset-gallery"></div>`;
-    if(tool==='shapes')html+=`<p class="muted">Фигуры и декоративные символы</p><div class="shape-grid">${[['heart','♥'],['star','★'],['circle','●'],['square','■']].map(([k,s])=>`<button data-shape="${k}" class="shape-tile">${s}</button>`).join('')}</div>`;
-    if(tool==='background')html+=`<label>Цвет фона <input id="bg-color" type="color" value="${esc(p.bg)}"></label><div class="swatches">${['#fce8f2','#ffe8da','#dff2e9','#e8e0ff','#d9eeff','#ffffff','#2f2942'].map(c=>`<button data-bg="${c}" style="background:${c}" aria-label="Фон ${c}"></button>`).join('')}</div><label class="btn light upload-label">Загрузить свой фон<input hidden type="file" id="background-file" accept="image/png,image/jpeg,image/webp,image/gif"></label><p class="muted">Загруженный фон станет растянутым изображением в нижнем слое.</p>`;
+    if(tool==='shapes')html+=`<p class="muted">Фигуры и декоративные символы</p><div class="shape-grid">${[['heart','♥'],['star','★'],['circle','●'],['square','■']].map(([k,s])=>`<button data-shape="${k}" class="shape-tile">${s}</button>`).join('')}</div>${stickers.length?`<h3>Стикеры из каталога</h3>${stickers.map(s=>`<button class="tile" data-sticker="${esc(s.id)}">＋ ${esc(s.name)}</button>`).join('')}`:''}`;
+    if(tool==='background')html+=`<label>Цвет фона <input id="bg-color" type="color" value="${esc(p.bg)}"></label><div class="swatches">${['#fce8f2','#ffe8da','#dff2e9','#e8e0ff','#d9eeff','#ffffff','#2f2942'].map(c=>`<button data-bg="${c}" style="background:${c}" aria-label="Фон ${c}"></button>`).join('')}</div>${backgrounds.length?`<h3>Фоны из каталога</h3>${backgrounds.map(b=>`<button class="tile" data-catalog-bg="${esc(b.id)}">▧ ${esc(b.name)}</button>`).join('')}`:''}<label class="btn light upload-label">Загрузить свой фон<input hidden type="file" id="background-file" accept="image/png,image/jpeg,image/webp,image/gif"></label><p class="muted">Загруженный фон станет растянутым изображением в нижнем слое.</p>`;
     if(tool==='draw')html+=`<p>Режим рисования: <b>включён</b>. Проведите по холсту мышью или пальцем.</p><label>Цвет кисти <input id="draw-color" type="color" value="#8a5bbf"></label><label>Толщина <input id="draw-size" type="range" min="2" max="35" value="6"></label><button class="btn light" data-tool="layers">Завершить рисование</button>`;
     if(tool==='layers')html+=`<div class="layer-list">${[...p.elements].reverse().map(e=>`<button class="layer ${selected===e.id?'current':''}" data-layer="${e.id}"><span>${e.type==='text'?'T':e.type==='image'?'▧':e.type==='draw'?'✎':'◇'}</span><span>${esc(e.type==='text'?e.text.slice(0,21):e.type==='image'?'Изображение':e.type==='draw'?'Рисунок':e.kind)}</span></button>`).join('')||'<p class="muted">На холсте пока нет элементов</p>'}</div>`;
-    if(tool==='audio')html+=`<button class="btn primary wide" data-audio="record">Записать голос</button><label class="btn light wide upload-label">Загрузить голос<input hidden type="file" id="voice-file" accept="audio/*"></label><hr><h3>Музыкальная подборка</h3><p class="muted">Мелодии созданы программно для этого проекта, сторонние записи не используются.</p>${melodies.map(m=>`<button class="tile" data-melody="${m.id}">♫ ${m.name}</button>`).join('')}<label class="btn light wide upload-label">Загрузить свою музыку<input hidden type="file" id="music-file" accept="audio/*"></label>`;
+    if(tool==='audio')html+=`<button class="btn primary wide" data-audio="record">Записать голос</button><label class="btn light wide upload-label">Загрузить голос<input hidden type="file" id="voice-file" accept="audio/*"></label><hr><h3>Музыкальная подборка</h3>${melodies.map(m=>`<button class="tile" data-melody="${m.id}">♫ ${esc(m.name)}${m.artist?' · '+esc(m.artist):''}</button>`).join('')}<label class="btn light wide upload-label">Загрузить свою музыку<input hidden type="file" id="music-file" accept="audio/*"></label>`;
     library.innerHTML=html;
     library.classList.toggle('mobile-hidden',mobile&&!libraryOpen);
     properties.classList.toggle('is-open',mobile&&!!selected&&!libraryOpen);
@@ -115,7 +122,7 @@ export function mountEditor(root,token,p){
       else if(kind==='replace'){
         const e=p.elements.find(v=>v.id===selected);if(e){e.src=url;commit(before);render();}
       }else if(kind==='background'){
-        p.elements.unshift({...base('image',0,0,800,formats[p.format]),src:url});commit(before);render();
+        replaceBackground(url);commit(before);render();
       }else {p[kind]={src:url,name:file.name};commit(before);renderAudio();}
       toast('Файл добавлен');
     }catch(err){toast(`Ошибка загрузки: ${err.message}`);}
@@ -128,20 +135,22 @@ export function mountEditor(root,token,p){
     }
   });
   properties.addEventListener('change',e=>{if(e.target.id==='replace-file')handleFile(e.target.files[0],'replace');});
-  library.addEventListener('click',e=>{
+  library.addEventListener('click',async e=>{
     const b=e.target.closest('button');if(!b)return;
     if(b.dataset.tool){tool=b.dataset.tool;libraryOpen=true;renderLibrary();return;}
-    if(b.dataset.template){if(p.elements.length && !confirm('Заменить текущее оформление?'))return;const before=snapshot();applyTemplate(p,b.dataset.template);selected=null;commit(before);render();}
+    if(b.dataset.template){if(p.elements.length && !confirm('Заменить текущее оформление?'))return;const before=snapshot();try{const {template}=await api.getTemplate(b.dataset.template,p.format);applyCatalogTemplate(p,template);}catch(error){applyTemplate(p,b.dataset.template);toast(`Каталог недоступен: ${error.message}`);}selected=null;commit(before);render();}
     if(b.dataset.add || b.dataset.text){const title=b.dataset.add==='title',subtitle=b.dataset.add==='subtitle';const size=title?64:subtitle?42:30;add({...base('text',100,formats[p.format]*.35,600,size*2),text:b.dataset.text|| (title?'Заголовок':subtitle?'Подзаголовок':'Ваш текст'),color:'#533a69',font:title?'serif':'sans',size,align:'center'});}
     if(b.dataset.shape)add({...base('shape',300,formats[p.format]*.35,140,140),kind:b.dataset.shape,color:'#a064c4'});
-    if(b.dataset.bg){const before=snapshot();p.bg=b.dataset.bg;commit(before);render();}
+    if(b.dataset.bg)setCanvasColor(b.dataset.bg);
+    if(b.dataset.catalogBg){const item=backgrounds.find(v=>v.id===b.dataset.catalogBg);if(item){const before=snapshot();replaceBackground(item.src);commit(before);render();}}
+    if(b.dataset.sticker){const item=stickers.find(v=>v.id===b.dataset.sticker);if(item)add({...base('image',260,formats[p.format]*.35,item.defaultSize.w,item.defaultSize.h),src:item.src});}
     if(b.dataset.layer)choose(b.dataset.layer);
-    if(b.dataset.melody){const before=snapshot();p.music={key:b.dataset.melody,name:melodies.find(m=>m.id===b.dataset.melody).name};commit(before);renderAudio();toast('Мелодия выбрана');}
+    if(b.dataset.melody){const track=melodies.find(m=>m.id===b.dataset.melody);if(track){const before=snapshot();p.music={key:track.id,name:track.name,...(track.src?{src:track.src}:{})};commit(before);renderAudio();toast('Мелодия выбрана');}}
     if(b.dataset.audio==='record')voiceDialog();
   });
-  library.addEventListener('input',e=>{if(e.target.id==='bg-color'){const before=snapshot();p.bg=e.target.value;commit(before);renderCanvas();}});
+  library.addEventListener('input',e=>{if(e.target.id==='bg-color')setCanvasColor(e.target.value);});
   properties.addEventListener('input',e=>{
-    if('canvasColor' in e.target.dataset){const before=snapshot();p.bg=e.target.value;commit(before);renderCanvas();return;}
+    if('canvasColor' in e.target.dataset){setCanvasColor(e.target.value);return;}
     const key=e.target.dataset.prop;if(!key)return;
     const obj=p.elements.find(o=>o.id===selected);if(!obj)return;
     const before=snapshot();obj[key]=['size','x','y','w','h','rotate','opacity'].includes(key)?Number(e.target.value):e.target.value;

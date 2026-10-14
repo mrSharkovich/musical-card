@@ -48,6 +48,14 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(self.client.get("/styles.css").status_code, 200)
         self.assertEqual(self.client.get("/src/main.js").status_code, 200)
 
+    def test_catalog_is_available(self) -> None:
+        templates = self.client.get("/api/catalog/templates")
+        self.assertEqual(templates.status_code, 200)
+        self.assertTrue(templates.json()["templates"])
+        music = self.client.get("/api/catalog/music")
+        self.assertEqual(music.status_code, 200)
+        self.assertTrue(music.json()["tracks"])
+
     def test_project_can_be_created_and_saved(self) -> None:
         token = self.create(project())
         self.assertEqual(self.client.get(f"/api/projects/{token}").json()["project"]["name"], "Тестовая открытка")

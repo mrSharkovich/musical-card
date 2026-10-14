@@ -12,7 +12,7 @@ export class CardAudio {
   volume(voice,music){this.voice.volume=voice;this.music.volume=music;if(this.gain)this.gain.gain.value=music*.25;}
   synth(){
     const track=melodies.find(m=>m.id===this.project.music?.key);
-    if(!track)return;
+    if(!track||track.kind==='file'||!Array.isArray(track.notes))return;
     this.ctx??=new AudioContext();
     this.gain=this.ctx.createGain();this.gain.gain.value=(this.project.musicVolume??.35)*.25;this.gain.connect(this.ctx.destination);
     const playNotes=()=>{
@@ -27,7 +27,7 @@ export class CardAudio {
         this.nodes.push(osc);
       });
     };
-    playNotes();this.timer=setInterval(playNotes,melodies[0].notes.length*420);
+    playNotes();this.timer=setInterval(playNotes,track.notes.length*420);
   }
   play(onDone){
     if(this.playing)return;

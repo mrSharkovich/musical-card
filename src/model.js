@@ -27,14 +27,33 @@ export function applyTemplate(p,theme) {
   ];
   return p;
 }
-export const templates = [
+export let templates = [
   {id:'blank',name:'Пустой холст',bg:'#ffffff',decoration:'+'},
   {id:'bloom',name:'Цветочное настроение',bg:'#fce8f2',decoration:'♡'},
   {id:'love',name:'С любовью',bg:'#ffe8da',decoration:'♡'},
   {id:'cheer',name:'Поздравление',bg:'#dff2e9',decoration:'★'}
 ];
-export const melodies = [
+export let melodies = [
   {id:'gentle',name:'Нежная мелодия',notes:[523,659,784,659,587,698,880,698]},
   {id:'festive',name:'Праздничная',notes:[392,494,587,784,698,587,494,523]},
   {id:'dream',name:'Мечта',notes:[440,523,659,523,392,494,587,494]}
 ];
+export let backgrounds = [];
+export let stickers = [];
+
+export function setCatalog(catalog) {
+  if(catalog.templates?.length) templates=catalog.templates;
+  if(catalog.tracks?.length) melodies=catalog.tracks;
+  backgrounds=catalog.backgrounds||[];
+  stickers=catalog.stickers||[];
+}
+
+export function applyCatalogTemplate(project,template) {
+  project.bg=template.bg;
+  project.elements=structuredClone(template.elements||[]).map(element=>({
+    ...element,
+    isBackground: element.type==='image' && element.x===0 && element.y===0 && element.w===800
+  }));
+  project.music=template.defaultMusic||null;
+  return project;
+}

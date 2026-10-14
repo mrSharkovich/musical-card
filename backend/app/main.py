@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import secrets
+import sys
 import time
 from collections import defaultdict, deque
 from datetime import UTC, datetime
@@ -22,7 +23,26 @@ FRONTEND_DIR = BASE_DIR.parent
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
 storage = FileStorage(DATA_DIR)
 
+# Каталог находится в корне проекта, а сервер может запускаться из backend/.
+if str(FRONTEND_DIR) not in sys.path:
+    sys.path.insert(0, str(FRONTEND_DIR))
+from db.build import build_catalog
+from db.catalog_routes import create_router
+
+CATALOG_DIR = Path(os.getenv("CATALOG_DIR", FRONTEND_DIR / "db"))
+
+
+def ensure_catalog() -> None:
+    """Собирает каталог только при первом запуске или после очистки .sqlite."""
+    required = (CATALOG_DIR / "music.sqlite", CATALOG_DIR / "templates.sqlite")
+    if all(path.is_file() for path in required):
+        return
+    if build_catalog(CATALOG_DIR):
+        raise RuntimeError("Не удалось собрать каталог материалов из db/seeds")
+
 app = FastAPI(title="Музыкальная открытка API", version="0.1.0")
+ensure_catalog()
+app.include_router(create_router(CATALOG_DIR))
 origins = [item.strip() for item in os.getenv("ALLOWED_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000").split(",") if item.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "PUT"], allow_headers=["Content-Type"])
 

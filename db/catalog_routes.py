@@ -25,71 +25,75 @@ import os
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
-from catalog import DB_DIR, Catalog
+try:  # Поддерживает запуск как пакета и отдельный запуск прежних тестов.
+    from .catalog import DB_DIR, Catalog
+except ImportError:  # pragma: no cover
+    from catalog import DB_DIR, Catalog
 
 
-router = APIRouter(prefix="/api/catalog", tags=["catalog"])
-# CATALOG_DIR в .env позволяет держать базы в другом месте; по умолчанию — папка db/.
-catalog = Catalog(os.getenv("CATALOG_DIR") or DB_DIR)
+def create_router(catalog_dir: str | os.PathLike[str] | None = None,
+                  media_dir: str | os.PathLike[str] | None = None) -> APIRouter:
+    """Возвращает маршруты для уже подготовленного каталога."""
+    router = APIRouter(prefix="/api/catalog", tags=["catalog"])
+    catalog = Catalog(catalog_dir or os.getenv("CATALOG_DIR") or DB_DIR, media_dir=media_dir)
 
-# Каталог общий и меняется только при пересборке баз — его можно кэшировать в браузере.
-CACHE = {"Cache-Control": "public, max-age=3600"}
+    # Каталог общий и меняется только при пересборке баз — его можно кэшировать в браузере.
+    cache = {"Cache-Control": "public, max-age=3600"}
+    def not_found() -> HTTPException:
+        return HTTPException(status_code=404, detail="Ресурс не найден")
 
-
-def not_found() -> HTTPException:
-    return HTTPException(status_code=404, detail="Ресурс не найден")
-
-
-@router.get("/music")
-def list_music() -> dict:
-    return {"tracks": catalog.list_tracks()}
-
-
-@router.get("/music/{track_id}/file")
-def music_file(track_id: str) -> FileResponse:
-    found = catalog.track_file(track_id)
-    if not found:
-        raise not_found()
-    path, media_type = found
-    return FileResponse(path, media_type=media_type, headers=CACHE, content_disposition_type="inline")
+    @router.get("/music")
+    def list_music() -> dict:
+        return {"tracks": catalog.list_tracks()}
 
 
-@router.get("/templates")
-def list_templates() -> dict:
-    return {"templates": catalog.list_templates()}
+    @router.get("/music/{track_id}/file")
+    def music_file(track_id: str) -> FileResponse:
+        found = catalog.track_file(track_id)
+        if not found:
+            raise not_found()
+        path, media_type = found
+        return FileResponse(path, media_type=media_type, headers=cache, content_disposition_type="inline")
 
 
-@router.get("/templates/{slug}")
-def get_template(slug: str, format: str = Query("4:5", pattern=r"^(4:5|1:1|9:16|16:9)$")) -> dict:
-    template = catalog.get_template(slug, format)
-    if not template:
-        raise not_found()
-    return {"template": template}
+    @router.get("/templates")
+    def list_templates() -> dict:
+        return {"templates": catalog.list_templates()}
 
 
-@router.get("/backgrounds")
-def list_backgrounds() -> dict:
-    return {"backgrounds": catalog.list_backgrounds()}
+    @router.get("/templates/{slug}")
+    def get_template(slug: str, format: str = Query("4:5", pattern=r"^(4:5|1:1|9:16|16:9)$")) -> dict:
+        template = catalog.get_template(slug, format)
+        if not template:
+            raise not_found()
+        return {"template": template}
 
 
-@router.get("/stickers")
-def list_stickers() -> dict:
-    return {"stickers": catalog.list_stickers()}
+    @router.get("/backgrounds")
+    def list_backgrounds() -> dict:
+        return {"backgrounds": catalog.list_backgrounds()}
 
 
-def send_media(table: str, media_id: str) -> FileResponse:
-    found = catalog.media_file(table, media_id)
-    if not found:
-        raise not_found()
-    path, media_type = found
-    return FileResponse(path, media_type=media_type, headers=CACHE, content_disposition_type="inline")
+    @router.get("/stickers")
+    def list_stickers() -> dict:
+        return {"stickers": catalog.list_stickers()}
 
 
-@router.get("/backgrounds/{media_id}/file")
-def background_file(media_id: str) -> FileResponse:
-    return send_media("backgrounds", media_id)
+    def send_media(table: str, media_id: str) -> FileResponse:
+        found = catalog.media_file(table, media_id)
+        if not found:
+            raise not_found()
+        path, media_type = found
+        return FileResponse(path, media_type=media_type, headers=cache, content_disposition_type="inline")
 
 
-@router.get("/stickers/{media_id}/file")
-def sticker_file(media_id: str) -> FileResponse:
-    return send_media("stickers", media_id)
+    @router.get("/backgrounds/{media_id}/file")
+    def background_file(media_id: str) -> FileResponse:
+        return send_media("backgrounds", media_id)
+
+
+    @router.get("/stickers/{media_id}/file")
+    def sticker_file(media_id: str) -> FileResponse:
+        return send_media("stickers", media_id)
+
+    return router

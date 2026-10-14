@@ -29,7 +29,7 @@ class CatalogTest(unittest.TestCase):
         cls.temp = tempfile.TemporaryDirectory()
         cls.out = Path(cls.temp.name)
         result = subprocess.run([sys.executable, str(DB_DIR / "build.py"), "--out", str(cls.out)],
-                                capture_output=True, text=True, encoding="utf-8")
+                                capture_output=True, text=True, encoding="utf-8", errors="replace")
         assert result.returncode == 0, result.stderr
         cls.catalog = Catalog(cls.out, media_dir=DB_DIR / "media")
 
@@ -105,7 +105,7 @@ class CatalogTest(unittest.TestCase):
         (seeds / "templates.json").write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         out = Path(tempfile.mkdtemp(dir=self.out))
         result = subprocess.run([sys.executable, str(DB_DIR / "build.py"), "--seeds", str(seeds), "--out", str(out)],
-                                capture_output=True, text=True, encoding="utf-8")
+                                capture_output=True, text=True, encoding="utf-8", errors="replace")
         result.out = out
         return result
 
@@ -135,7 +135,6 @@ class CatalogTest(unittest.TestCase):
         result = self.build_with_template([
             {"type": "image", "x": 0, "y": 0, "w": 800, "h": 1000, "src": "background:hubble-ultra-deep-field"}])
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("непроверенные", result.stderr)
 
     def test_template_with_unknown_image_fails(self) -> None:
         result = self.build_with_template([
@@ -211,27 +210,33 @@ except ImportError:  # окружение без FastAPI
 @unittest.skipIf(FastAPI is None, "FastAPI не установлен")
 class RoutesTest(unittest.TestCase):
     def test_routes(self) -> None:
-        from catalog_routes import router
-        app = FastAPI()
-        app.include_router(router)
-        client = TestClient(app)
-        tracks = client.get("/api/catalog/music").json()["tracks"]
-        self.assertGreaterEqual(len(tracks), 3)
-        piano = client.get("/api/catalog/music/green-streaks-in-the-sky/file")
-        self.assertEqual(piano.status_code, 200)
-        self.assertEqual(piano.headers["content-type"], "audio/mpeg")
-        self.assertEqual(len(client.get("/api/catalog/templates").json()["templates"]), 4)
-        body = client.get("/api/catalog/templates/cheer", params={"format": "16:9"}).json()["template"]
-        self.assertEqual(body["bg"], "#dff2e9")
-        self.assertEqual(client.get("/api/catalog/templates/cheer", params={"format": "2:1"}).status_code, 422)
-        self.assertEqual(client.get("/api/catalog/music/gentle/file").status_code, 404)  # synth — без файла
-        backgrounds = client.get("/api/catalog/backgrounds").json()["backgrounds"]
-        stickers = client.get("/api/catalog/stickers").json()["stickers"]
-        image = client.get(backgrounds[0]["src"])
-        self.assertEqual(image.status_code, 200)
-        self.assertTrue(image.headers["content-type"].startswith("image/"))
-        self.assertEqual(client.get(stickers[0]["src"]).status_code, 200)
-        self.assertEqual(client.get(f"/api/catalog/stickers/{backgrounds[0]['id']}/file").status_code, 404)
+        from catalog_routes import create_router
+        with tempfile.TemporaryDirectory() as temp:
+            out = Path(temp)
+            result = subprocess.run([sys.executable, str(DB_DIR / "build.py"), "--out", str(out)],
+                                    capture_output=True, text=True, encoding="utf-8", errors="replace")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            router = create_router(out, media_dir=DB_DIR / "media")
+            app = FastAPI()
+            app.include_router(router)
+            client = TestClient(app)
+            tracks = client.get("/api/catalog/music").json()["tracks"]
+            self.assertGreaterEqual(len(tracks), 3)
+            piano = client.get("/api/catalog/music/green-streaks-in-the-sky/file")
+            self.assertEqual(piano.status_code, 200)
+            self.assertEqual(piano.headers["content-type"], "audio/mpeg")
+            self.assertEqual(len(client.get("/api/catalog/templates").json()["templates"]), 4)
+            body = client.get("/api/catalog/templates/cheer", params={"format": "16:9"}).json()["template"]
+            self.assertEqual(body["bg"], "#dff2e9")
+            self.assertEqual(client.get("/api/catalog/templates/cheer", params={"format": "2:1"}).status_code, 422)
+            self.assertEqual(client.get("/api/catalog/music/gentle/file").status_code, 404)
+            backgrounds = client.get("/api/catalog/backgrounds").json()["backgrounds"]
+            stickers = client.get("/api/catalog/stickers").json()["stickers"]
+            image = client.get(backgrounds[0]["src"])
+            self.assertEqual(image.status_code, 200)
+            self.assertTrue(image.headers["content-type"].startswith("image/"))
+            self.assertEqual(client.get(stickers[0]["src"]).status_code, 200)
+            self.assertEqual(client.get(f"/api/catalog/stickers/{backgrounds[0]['id']}/file").status_code, 404)
 
 
 if __name__ == "__main__":

@@ -215,29 +215,38 @@ def finish(conn: sqlite3.Connection) -> None:
     conn.close()
 
 
-def main() -> int:
+def build_catalog(out: Path = DB_DIR, seeds: Path = SEEDS_DIR, commercial_only: bool = False) -> int:
+    """Собирает каталог программно; используется при первом старте API."""
     global SEEDS_DIR
+    previous_seeds = SEEDS_DIR
+    SEEDS_DIR = seeds
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=out) as temp:
+            music_tmp, templates_tmp = Path(temp) / "music.sqlite", Path(temp) / "templates.sqlite"
+            try:
+                skip = noncommercial_licenses() if commercial_only else set()
+                track_ids = build_music(music_tmp, skip)
+                build_templates(templates_tmp, track_ids, skip)
+            except (BuildError, json.JSONDecodeError, KeyError) as error:
+                print(f"Ошибка: {error}", file=sys.stderr)
+                return 1
+            os.replace(music_tmp, out / "music.sqlite")
+            os.replace(templates_tmp, out / "templates.sqlite")
+        return 0
+    finally:
+        SEEDS_DIR = previous_seeds
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(description="Собрать music.sqlite и templates.sqlite")
     parser.add_argument("--out", type=Path, default=DB_DIR, help="папка для готовых баз (по умолчанию db/)")
     parser.add_argument("--seeds", type=Path, default=SEEDS_DIR, help="папка с данными (по умолчанию db/seeds/)")
     parser.add_argument("--commercial-only", action="store_true",
                         help="не включать материалы с некоммерческими (NC) лицензиями")
     args = parser.parse_args()
-    SEEDS_DIR = args.seeds
-    args.out.mkdir(parents=True, exist_ok=True)
-
-    # Собираем во временные файлы и заменяем готовые базы, только если всё прошло без ошибок.
-    with tempfile.TemporaryDirectory(dir=args.out) as temp:
-        music_tmp, templates_tmp = Path(temp) / "music.sqlite", Path(temp) / "templates.sqlite"
-        try:
-            skip = noncommercial_licenses() if args.commercial_only else set()
-            track_ids = build_music(music_tmp, skip)
-            build_templates(templates_tmp, track_ids, skip)
-        except (BuildError, json.JSONDecodeError, KeyError) as error:
-            print(f"Ошибка: {error}", file=sys.stderr)
-            return 1
-        os.replace(music_tmp, args.out / "music.sqlite")
-        os.replace(templates_tmp, args.out / "templates.sqlite")
+    if build_catalog(args.out, args.seeds, args.commercial_only):
+        return 1
 
     for name in ("music.sqlite", "templates.sqlite"):
         conn = sqlite3.connect(args.out / name)

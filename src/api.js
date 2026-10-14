@@ -73,6 +73,16 @@ export const api={
     const data=JSON.parse(raw);
     if(data.opensAt && Date.now()<Date.parse(data.opensAt)) return {status:'scheduled',opensAt:data.opensAt};
     return {status:'ready',project:data.project};
+  },
+  async getCatalog(){
+    const [templates,tracks,backgrounds,stickers]=await Promise.all([
+      request('/api/catalog/templates'),request('/api/catalog/music'),
+      request('/api/catalog/backgrounds'),request('/api/catalog/stickers')
+    ]);
+    return {templates:templates.templates,tracks:tracks.tracks,backgrounds:backgrounds.backgrounds,stickers:stickers.stickers};
+  },
+  async getTemplate(id,format){
+    return request(`/api/catalog/templates/${encodeURIComponent(id)}?format=${encodeURIComponent(format)}`);
   }
 };
 export const linkFor = (type,id) => `${location.origin}${location.pathname}#/${type}/${encodeURIComponent(id)}`;

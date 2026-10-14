@@ -1,5 +1,5 @@
 import {api,linkFor} from './api.js';
-import {newProject,templates,formats,esc} from './model.js';
+import {newProject,applyCatalogTemplate,templates,formats,esc,setCatalog} from './model.js';
 import {renderStage,scaleStage} from './stage.js';
 import {CardAudio} from './audio.js';
 import {mountEditor} from './editor.js';
@@ -8,11 +8,21 @@ import {API_BASE} from './config.js';
 
 const root=$('#app');
 let cleanup=()=>{};
+const catalogReady=api.getCatalog().then(setCatalog).catch(error=>{
+  console.warn('Не удалось загрузить каталог:',error);
+});
 function header(){return `<header class="site-head"><a class="brand" href="#/">♪ Музыкальная открытка</a><nav><a href="#/templates">Шаблоны</a><button data-create class="btn primary">Создать открытку</button></nav></header>`;}
 function footer(){return `<footer class="site-footer">Музыкальная открытка · Без регистрации · Все встроенные оформления созданы для проекта</footer>`;}
 async function create(template='blank',format='4:5'){
-  const project=newProject('Моя открытка',format,template);
-  try{const {editToken}=await api.create(project);location.hash=`#/edit/${editToken}`;}
+  await catalogReady;
+  const project=newProject('Моя открытка',format,'blank');
+  try{
+    if(template!=='blank'){
+      const {template: selectedTemplate}=await api.getTemplate(template,format);
+      applyCatalogTemplate(project,selectedTemplate);
+    }
+    const {editToken}=await api.create(project);location.hash=`#/edit/${editToken}`;
+  }
   catch(e){toast(`Не удалось создать открытку: ${e.message}`);}
 }
 function landing(){
@@ -68,6 +78,7 @@ async function route(){
   cleanup();cleanup=()=>{};
   const [page,id]=location.hash.replace(/^#\/?/,'').split('/');
   try{
+    await catalogReady;
     if(page==='templates')gallery();
     else if(page==='edit'&&id){const {project}=await api.getProject(id);cleanup=mountEditor(root,id,project);}
     else if(page==='preview'&&id){const {project}=await api.getProject(id);showViewer(project,{preview:true,token:id});}
