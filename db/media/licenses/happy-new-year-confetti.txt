@@ -1,0 +1,21 @@
+Подтверждение лицензии изображения
+
+Изображение: Happy New Year! (надпись с конфетти)
+Автор:       jhnri4
+Источник:    https://openclipart.org/detail/99007/happy-new-year!-by-jhnri4
+Лицензия:    CC0 1.0 (Public Domain Dedication) — https://creativecommons.org/publicdomain/zero/1.0/
+             Все работы на Openclipart публикуются под CC0.
+Файл:        stickers/happy-new-year-confetti.png (800×533, прозрачный фон), без изменений
+SHA-256:     5c221a90f9dd52932428eec1b2dd52d80752930bd9eb28e51d3b1de23c2e8a22
+
+Метаданные внутри PNG-файла (записаны Inkscape / Openclipart):
+   Title:       Happy New Year!
+   Author:      jhnri4
+   Description: Happy New Year sign with confetti
+   Created:     2010-12-01T21:47:19
+   Source:      https://openclipart.org/detail/99007/happy-new-year!-by-jhnri4
+   Copyright:   CC0 Public Domain Dedication http://creativecommons.org/publicdomain/zero/1.0/
+
+Проверено 2026-10-14 по метаданным файла (страница openclipart.org в момент проверки не открылась).
+
+TODO: открыть страницу на Openclipart и добавить скриншот (happy-new-year-confetti.png).

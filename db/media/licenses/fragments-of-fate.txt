@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        Fragments Of Fate
+Автор:       Skye Jordan
+Источник:    https://ccmixter.org/files/SkyeJordan/69454
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/fragments-of-fate.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     ad440bc03ba2891dff156c054ac129e7a9177fb85628e572392cdc12ec9e2d27
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2025 Skye Jordan Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/SkyeJordan/69454
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - инструментальный эмбиент на фортепиано, 60 BPM; чужих сэмплов не указано.
+
+TODO: добавить рядом скриншот страницы трека (fragments-of-fate.png).

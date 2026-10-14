@@ -1,0 +1,13 @@
+Подтверждение лицензии изображения
+
+Изображение: Hurricane Isabel from ISS (ураган Изабель, вид с МКС, 2003)
+Автор:       астронавт Ed Lu; файл предоставлен Mike Trenchard, NASA Earth Sciences & Image Analysis Laboratory, Johnson Space Center
+Источник:    https://commons.wikimedia.org/wiki/File:Hurricane_Isabel_from_ISS.jpg
+Лицензия:    общественное достояние (PD-USGov-NASA): материалы NASA не охраняются авторским правом, если не указано иное
+Файл:        backgrounds/hurricane-isabel.jpg — уменьшенная копия 960×635 (оригинал 3032×2007, пропорции совпадают)
+SHA-256:     b1139f30d0a55b22773b941e275e97b5139a92ac16e8904184ec80c3baab4de4
+
+Проверено 2026-10-14 по странице файла на Wikimedia Commons.
+Указание автора не обязательно, но NASA просит указывать источник — подпись добавлена в attribution_text.
+
+TODO: добавить скриншот страницы файла (hurricane-isabel.png).

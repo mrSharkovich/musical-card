@@ -1,0 +1,19 @@
+Подтверждение лицензии трека
+
+Трек:        improvisation 1,3,2025
+Автор:       Speck
+Источник:    https://ccmixter.org/files/speck/69307
+Лицензия:    Creative Commons Attribution 4.0 International (CC BY 4.0)
+             https://creativecommons.org/licenses/by/4.0/
+Файл:        music/improvisation-2025.mp3
+Изменения:   перекодирован в MP3 128 kbps (только сжатие, музыка не менялась)
+SHA-256:     78a5fe0281126d14db619c94736b038aed97e50140ae1f31471e0269dee73a12
+
+1. Метаданные файла (ID3, поле copyright), как их записал ccMixter:
+   2025 Speck Licensed to the public under https://creativecommons.org/licenses/by/4.0/ Verify at https://ccmixter.org/files/speck/69307
+
+2. Страница трека на ccMixter, проверено 2026-10-14:
+   - лицензия: CC BY 4.0;
+   - инструментальная экспериментальная электроника (Casio SK-1, синтезаторы); чужих сэмплов не указано.
+
+TODO: добавить рядом скриншот страницы трека (improvisation-2025.png).

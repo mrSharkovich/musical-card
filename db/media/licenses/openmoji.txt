@@ -1,0 +1,32 @@
+Подтверждение лицензии стикеров OpenMoji
+
+Автор:       OpenMoji — the open-source emoji and icon project (HfG Schwäbisch Gmünd)
+Источник:    https://openmoji.org, репозиторий https://github.com/hfg-gmuend/openmoji
+Лицензия:    Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+             https://creativecommons.org/licenses/by-sa/4.0/
+             Полный текст из репозитория — openmoji-LICENSE.txt рядом.
+Подпись, которую рекомендует OpenMoji (FAQ на openmoji.org):
+             «All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0»
+
+Как проверено (2026-10-14): присланные командой PNG 618×618 сравнены попиксельно с файлами
+color/618x618/*.png из репозитория OpenMoji (ветка master) — все 9 совпали полностью.
+В базу положены сами файлы из репозитория, без изменений.
+
+   openmoji-balloon         U+1F388  Воздушный шарик    https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F388.png
+      SHA-256 4774f80e4d5c5b516c42dbb22aed945bb421bb856fdf088e3d782e2f7d622f92
+   openmoji-gift            U+1F381  Подарок            https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F381.png
+      SHA-256 b17186b02349f3b5a6eece0ead16a28a726506417d36d2cd97501ba86efd99ee
+   openmoji-ribbon          U+1F380  Бант               https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F380.png
+      SHA-256 f995e5c043ef5499c40a9725028a54e77fdbcbd459d2a127f1aa7fd72eb8525d
+   openmoji-heart           U+2665   Сердце             https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/2665.png
+      SHA-256 141fa61fd82e108f60cc911858e3bfd42d35ae0cf93eb160fd8e5fe3d8b702ff
+   openmoji-sparkles        U+2728   Блёстки            https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/2728.png
+      SHA-256 4e9faa1ced7c739598166ae6d6d8b790aa9f5a9c595e215e0c2dd549a2764d9d
+   openmoji-sparkler        U+1F387  Бенгальский огонь  https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F387.png
+      SHA-256 4cc852884318c5bb7846551e5cf9b5a6a6d1e959bbf60bdd4d00ca156c2476ab
+   openmoji-fireworks       U+1F386  Салют              https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F386.png
+      SHA-256 ed8801bd327d30ff229c3138bd641b1e9bf0dca19198e9599b2173afcb09febc
+   openmoji-christmas-tree  U+1F384  Ёлка               https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F384.png
+      SHA-256 1ab460aac9a23c17ad5a6fd5ce087986bebcb0f031ac69f8e328d4429edd130a
+   openmoji-dog-face        U+1F436  Собака             https://github.com/hfg-gmuend/openmoji/blob/master/color/618x618/1F436.png
+      SHA-256 0a71dcce68116cad0f5b821add6a73b6fdaeda8a811568de80eb2f4d0e684c8c

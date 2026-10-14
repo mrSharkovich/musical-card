@@ -1,0 +1,20 @@
+Подтверждение лицензии изображения
+
+Изображение: Dülmen, Fröbelstraße, Mohn am Feldrand -- 2021 -- 9174 (мак на краю поля, Дюльмен, 8 июня 2021)
+Автор:       Dietmar Rabich
+Источник:    https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Fr%C3%B6belstra%C3%9Fe,_Mohn_am_Feldrand_--_2021_--_9174.jpg
+Лицензия:    Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+             https://creativecommons.org/licenses/by-sa/4.0/
+             (на странице также указана альтернатива — Free Art License 1.3)
+Подпись, которую требует автор:
+             Dietmar Rabich / Wikimedia Commons / "Dülmen, Fröbelstraße, Mohn am Feldrand -- 2021 -- 9174" / CC BY-SA 4.0
+Файл:        backgrounds/poppy-field.jpg — уменьшенная копия 960×720
+             (оригинал 5885×4414, пропорции совпадают); других изменений нет
+SHA-256:     298cfa2aea9c6594b1e2e22f8cf6a5e276c4acac8267ced12fcedef4223bb9d4
+
+1. Метаданные файла (EXIF): Artist = Dietmar Rabich; Copyright = Dietmar Rabich, Dülmen.
+2. Страница файла на Wikimedia Commons, проверено 2026-10-14: лицензия CC BY-SA 4.0, автор Dietmar Rabich,
+   подпись автора — как выше. Ссылку подтвердила команда.
+
+CC BY-SA разрешена решением команды 2026-10-14 (на время хакатона; отметить в LICENSES.md).
+TODO: добавить скриншот раздела «Licensing» (poppy-field.png).

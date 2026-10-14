@@ -1,0 +1,16 @@
+Подтверждение лицензии изображения
+
+Изображение: Книги, яблоко и карандаши
+Автор:       j4p4n
+Источник:    Openclipart (https://openclipart.org) — точная страница не сохранилась
+Лицензия:    CC0 1.0 (Public Domain Dedication) — https://creativecommons.org/publicdomain/zero/1.0/
+Файл:        stickers/books-apple.png (800×800), без изменений
+SHA-256:     cc0b4d7e9c9e9e0a5b8f584078ac85180fe197b7870c26d5a8772a5dd1327198
+
+Основание: лицензия записана в метаданных самого PNG-файла (Inkscape / Openclipart):
+   Author:    j4p4n
+   Copyright: CC0 Public Domain Dedication http://creativecommons.org/publicdomain/zero/1.0/
+   Software:  www.inkscape.org
+
+Проверено 2026-10-14 по метаданным файла. CC0 не требует указывать автора.
+Ссылку на страницу можно найти поиском по картинке (Яндекс Картинки или Google Lens) и дописать сюда.
