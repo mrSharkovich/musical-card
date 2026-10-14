@@ -55,7 +55,7 @@ export const api={
   },
   async mediaUrl(src){
     if(!src) return '';
-    if(!src.startsWith('local:')) return src;
+    if(!src.startsWith('local:')) return API_BASE && src.startsWith('/') ? `${API_BASE}${src}` : src;
     const blob=await readBlob(src.slice(6));
     if(!blob) throw Error('Медиафайл отсутствует в этом браузере');
     return URL.createObjectURL(blob);
