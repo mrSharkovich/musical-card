@@ -126,7 +126,8 @@ def number(value, where: str) -> float:
 
 
 def layout_elements(slug: str, elements: list[dict], height: int) -> list[dict]:
-    """Переводит yRatio в пиксели для конкретного формата, как applyTemplate во фронтенде."""
+    """Переводит yRatio/hRatio (доли высоты холста) в пиксели для конкретного формата,
+    как applyTemplate во фронтенде. Фон на весь холст: "yRatio": 0, "hRatio": 1."""
     result = []
     for index, source in enumerate(elements, start=1):
         where = f"templates.json, шаблон {slug}, элемент {index}"
@@ -136,6 +137,8 @@ def layout_elements(slug: str, elements: list[dict], height: int) -> list[dict]:
         element.setdefault("id", f"{slug}-{index}")
         if "yRatio" in element:
             element["y"] = round(number(element.pop("yRatio"), where) * height, 2)
+        if "hRatio" in element:
+            element["h"] = round(number(element.pop("hRatio"), where) * height, 2)
         if element["type"] == "text" and "h" not in element:
             element["h"] = number(element.get("size"), where) * 2
         for field in ("x", "y", "w", "h"):
@@ -180,7 +183,9 @@ def build_templates(path: Path, track_ids: set[str], skip_licenses: set[str]) ->
         insert(conn, "templates", row, where)
 
         for fmt, height in FORMATS.items():
-            elements = layout_elements(slug, template.get("elements", []), height)
+            # "layouts": {"16:9": [...]} — своя раскладка для формата, где общая не помещается
+            source = template.get("layouts", {}).get(fmt, template.get("elements", []))
+            elements = layout_elements(slug, source, height)
             insert(conn, "template_variants", {
                 "template_slug": slug,
                 "format": fmt,
@@ -190,7 +195,10 @@ def build_templates(path: Path, track_ids: set[str], skip_licenses: set[str]) ->
 
         # Картинки каталога в элементах шаблона ("src": "background:<id>" / "sticker:<id>"):
         # картинка должна быть в CSV, а у активного шаблона — ещё и проверена.
-        for element in template.get("elements", []):
+        all_elements = list(template.get("elements", []))
+        for extra in template.get("layouts", {}).values():
+            all_elements += extra
+        for element in all_elements:
             src = element.get("src")
             if not (isinstance(src, str) and ":" in src):
                 continue
