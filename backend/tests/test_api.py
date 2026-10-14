@@ -41,6 +41,12 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 201, response.text)
         return response.json()["editToken"]
 
+    def test_frontend_is_served_by_api_server(self) -> None:
+        self.assertEqual(self.client.get("/").status_code, 200)
+        self.assertIn("Музыкальная открытка", self.client.get("/").text)
+        self.assertEqual(self.client.get("/styles.css").status_code, 200)
+        self.assertEqual(self.client.get("/src/main.js").status_code, 200)
+
     def test_project_can_be_created_and_saved(self) -> None:
         token = self.create(project())
         self.assertEqual(self.client.get(f"/api/projects/{token}").json()["project"]["name"], "Тестовая открытка")

@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from .files import validate_upload
 from .schemas import EditTokenResponse, OkResponse, ProjectRequest, PublicIdResponse, PublishRequest
@@ -17,6 +18,7 @@ from .storage import FileStorage, project_asset_ids, public_media_urls
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
+FRONTEND_DIR = BASE_DIR.parent
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
 storage = FileStorage(DATA_DIR)
 
@@ -144,3 +146,18 @@ def get_card_asset(public_id: str, asset_id: str):
         raise not_found()
     path, metadata = asset
     return FileResponse(path, media_type=metadata["mediaType"], content_disposition_type="inline")
+
+
+# Роуты фронтенда подключаются после API: /api/* всегда обрабатывается сервером,
+# а браузер получает страницу и ES-модули с того же origin.
+app.mount("/src", StaticFiles(directory=FRONTEND_DIR / "src"), name="frontend-src")
+
+
+@app.get("/styles.css", include_in_schema=False)
+def frontend_styles() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/", include_in_schema=False)
+def frontend_index() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "index.html", media_type="text/html")
