@@ -76,7 +76,8 @@ class CatalogTest(unittest.TestCase):
 
     def test_gallery_matches_frontend_shape(self) -> None:
         gallery = self.catalog.list_templates()
-        self.assertEqual([t["id"] for t in gallery], ["blank", "bloom", "love", "cheer"])
+        self.assertEqual([t["id"] for t in gallery][:4], ["blank", "bloom", "love", "cheer"])
+        self.assertGreaterEqual(len(gallery), 4)
         self.assertTrue({"id", "name", "bg", "decoration"} <= set(gallery[0]))
 
     def test_backgrounds_and_stickers(self) -> None:
@@ -225,7 +226,7 @@ class RoutesTest(unittest.TestCase):
             piano = client.get("/api/catalog/music/green-streaks-in-the-sky/file")
             self.assertEqual(piano.status_code, 200)
             self.assertEqual(piano.headers["content-type"], "audio/mpeg")
-            self.assertEqual(len(client.get("/api/catalog/templates").json()["templates"]), 4)
+            self.assertGreaterEqual(len(client.get("/api/catalog/templates").json()["templates"]), 4)
             body = client.get("/api/catalog/templates/cheer", params={"format": "16:9"}).json()["template"]
             self.assertEqual(body["bg"], "#dff2e9")
             self.assertEqual(client.get("/api/catalog/templates/cheer", params={"format": "2:1"}).status_code, 422)

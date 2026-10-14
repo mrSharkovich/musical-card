@@ -7,7 +7,7 @@
 | `music.sqlite` | Музыкальная подборка для панели «Аудио» |
 | `templates.sqlite` | Шаблоны (`templates` + `template_variants` — раскладка под 4 формата), фоны (`backgrounds`) и стикеры (`stickers`) |
 
-
+Черновики и опубликованные открытки пользователей сюда **не входят** — ими занимается бэкенд (`backend/`).
 
 ## Структура
 
@@ -25,6 +25,7 @@ db/
   build.py         собирает обе базы из seeds/
   catalog.py       чтение баз для бэкенда (только стандартная библиотека)
   catalog_routes.py  готовые маршруты FastAPI
+  tests/           проверки
 ```
 
 ## Сборка
@@ -34,6 +35,8 @@ db/
 ```bash
 python db/build.py
 ```
+
+Появятся `db/music.sqlite` и `db/templates.sqlite`. Сборка остановится с понятной ошибкой, если в данных что-то не так: неразрешённая лицензия, нет автора для CC BY, файл не найден, сломан JSON шаблона.
 
 ## Сейчас в каталоге
 
@@ -65,7 +68,12 @@ python db/build.py
 | `nunspeet-christmas-lights` | Дом с рождественской подсветкой | автор уточняется | CC BY-SA 4.0 |
 
   Ещё `hubble-ultra-deep-field` — черновик: лицензия версии 2014 года не проверена.
-- 11 стикеров: `happy-new-year-confetti` (jhnri4) и `books-apple` (j4p4n) с Openclipart — CC0; 9 эмодзи OpenMoji (`openmoji-*`) — CC BY-SA 4.0.
+- 13 стикеров: `happy-new-year-confetti` (jhnri4) и `books-apple` (j4p4n) с Openclipart — CC0; 9 эмодзи OpenMoji (`openmoji-*`) — CC BY-SA 4.0; подложки для текста `plate-light` и `plate-dark` — работа команды, MIT.
+- 14 шаблонов, каждый в 4 форматах (4:5, 1:1, 9:16, 16:9):
+  - перенесены из `src/model.js` (элементы совпадают с `applyTemplate()`): `blank`, `bloom`, `love`, `cheer`;
+  - с фонами и стикерами каталога: `new-year-night` (салют), `birthday-balloons` (шарики), `winter-flowers` (цветы под снегом), `love-hearts` (люблю тебя), `teacher-day` (День учителя);
+  - без картинок, только текст и линии (элементы `draw`, как рисование от руки в редакторе): `women-day` (8 Марта), `defender-day` (23 Февраля), `wedding` (свадьба), `thank-you` (спасибо), `get-well` (выздоравливай).
+  У них указан трек по умолчанию (`default_track_id`), а авторы фонов и стикеров попадают в `credits`.
 - Картинки, которые ждут источника или лицензии, — в `seeds/pending_images.csv`.
 
 ## Лицензии
@@ -80,4 +88,3 @@ python db/build.py
 - лицензия есть в белом списке;
 - для лицензий с указанием автора заполнен `attribution_text`;
 - чужой трек или картинку нельзя сделать `active`, пока не указаны `source_url`, `verified_at` и `license_proof_path` (скриншот страницы с лицензией в `media/licenses/`).
-
