@@ -1,2 +1,8 @@
 # Локальные рабочие планы
 THEME_PLAN.md
+
+# Локальные инструкции и служебные данные Codex
+AGENTS.md
+CODEX.md
+.agents/
+.codex/
