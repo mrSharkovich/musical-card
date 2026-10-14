@@ -141,7 +141,7 @@ export function mountEditor(root,token,p){
   });
   library.addEventListener('input',e=>{if(e.target.id==='bg-color'){const before=snapshot();p.bg=e.target.value;commit(before);renderCanvas();}});
   properties.addEventListener('input',e=>{
-    if(e.target.dataset.canvasColor){const before=snapshot();p.bg=e.target.value;commit(before);renderCanvas();return;}
+    if('canvasColor' in e.target.dataset){const before=snapshot();p.bg=e.target.value;commit(before);renderCanvas();return;}
     const key=e.target.dataset.prop;if(!key)return;
     const obj=p.elements.find(o=>o.id===selected);if(!obj)return;
     const before=snapshot();obj[key]=['size','x','y','w','h','rotate','opacity'].includes(key)?Number(e.target.value):e.target.value;
