@@ -157,7 +157,8 @@ class Catalog:
                     f"SELECT m.title, m.author, m.attribution_text, l.code AS license_code, l.url AS license_url "
                     f"FROM {table} m JOIN licenses l ON l.code = m.license_code "
                     "WHERE m.id = ? AND l.requires_attribution = 1", (media_id,)).fetchone()
-                if credit and dict(credit) not in credits:
+                # одинаковые подписи (например, у всех эмодзи OpenMoji) показываем один раз
+                if credit and all(c["attribution_text"] != credit["attribution_text"] for c in credits):
                     credits.append(dict(credit))
 
         track = self.get_track(row["default_track_id"]) if row["default_track_id"] else None
