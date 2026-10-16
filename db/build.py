@@ -163,7 +163,9 @@ def build_templates(path: Path, track_ids: set[str], skip_licenses: set[str]) ->
             if row.get("license_code") in skip_licenses:
                 print(f"  пропущена (некоммерческая лицензия): {row.get('id')}")
                 continue
-            media_file(row.get("media_path"), where)
+            # Inactive / unverified assets are metadata-only; no distributable file is needed.
+            if row.get("status") == "active":
+                media_file(row.get("media_path"), where)
             media_file(row.get("license_proof_path"), where)
             insert(conn, table, row, where)
             media_ids[table].add(row["id"])

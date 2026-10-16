@@ -1,0 +1,34 @@
+Musical Card — исправление сохранения и публикации шаблонов
+
+ПРИЧИНА
+Файл src/model.js при применении шаблона добавлял поле isBackground:false
+к каждому элементу (включая фигуры и текст). Серверная проверка
+справедливо запрещает это поле для типов shape/text/draw, возвращая HTTP 422.
+
+УСТАНОВКА НА ВИРТУАЛЬНОЙ WINDOWS 11
+1. Если в браузере остались несохранённые правки, запиши текст и сделай
+   скриншот до обновления страницы. Правки, которые сервер отклонил,
+   могут отсутствовать в сохранённой версии открытки.
+2. Останови Uvicorn (Ctrl+C). Сделай резервную копию src/model.js.
+3. Скопируй из патча src/model.js в:
+   C:\Users\vboxuser\Desktop\musical-card\src\model.js
+   с заменой файла.
+4. При желании скопируй также tests/template-contract.mjs и
+   backend/tests/test_template_contract.py. Они не меняют работу сайта.
+5. Не меняй backend/data, .venv, LICENSE, LICENSES.md и другие файлы.
+6. Запусти сервер:
+   cd "C:\Users\vboxuser\Desktop\musical-card"
+   .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8001
+7. На основном ПК открой http://192.168.1.102:8001 и нажми Ctrl+Shift+R.
+8. Создай открытку из шаблона «Поздравление», внеси изменения,
+   дождись «Сохранено», затем опубликуй и проверь публичную ссылку.
+
+ТЕСТЫ (PowerShell внутри ВМ)
+$env:PYTHONPATH="backend"
+.\.venv\Scripts\python.exe -m unittest discover -s backend\tests -v
+При наличии Node.js: node tests\template-contract.mjs
+
+БЕЗОПАСНОСТЬ И ЛИЦЕНЗИИ
+Это исправление не ослабляет серверную проверку входных данных.
+Новых библиотек или медиаматериалов нет. Лицензии MIT и LICENSES.md
+остаются без изменений. Порты роутера не открывать до сетевой проверки.
