@@ -8,7 +8,7 @@ import {MAX_IMAGE_MB,MAX_AUDIO_MB} from './config.js';
 const menu=[['templates','Шаблоны'],['text','Текст'],['images','Изображения'],['shapes','Элементы'],['background','Фоны'],['draw','Рисование'],['layers','Слои'],['audio','Аудио']];
 const formatOptions=p=>Object.keys(formats).map(f=>`<option value="${f}" ${p.format===f?'selected':''}>${f}</option>`).join('');
 export function mountEditor(root,token,p){
-  let tool='templates',selected=null,zoom=1,scale=1,panX=0,panY=0,gesture=null,saveTimer=null,changeNumber=0,recording=null;
+  let tool='templates',selected=null,zoom=1,scale=1,gesture=null,saveTimer=null,changeNumber=0,recording=null;
   let saveFlight=Promise.resolve();
   const mobile=matchMedia('(max-width:750px)').matches;
   let libraryOpen=!mobile;
@@ -22,6 +22,7 @@ export function mountEditor(root,token,p){
       <button class="btn light" data-top="undo" title="Отменить">↶</button>
       <button class="btn light" data-top="redo" title="Повторить">↷</button>
       <button class="btn light" data-top="link">Ссылка редактирования</button>
+      <button class="btn light" data-top="delete" title="Удалить открытку и связанные материалы">Удалить</button>
       <button class="btn light" data-top="preview">Просмотр</button>
       <button class="btn primary" data-top="publish">Опубликовать</button>
     </header>
@@ -39,7 +40,7 @@ export function mountEditor(root,token,p){
     </div>
     <footer class="audio-panel" id="audio-panel"></footer>
   </div>`;
-  const stage=$('#stage',root),viewport=$('#viewport',root),library=$('#library',root),properties=$('#properties',root),stageShell=stage.parentElement;
+  const stage=$('#stage',root),viewport=$('#viewport',root),library=$('#library',root),properties=$('#properties',root);
   const undoStack=[],redoStack=[];
   const snapshot=()=>JSON.stringify(p);
   function commit(before){if(before!==snapshot()){undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack.length=0;dirty();}}
@@ -59,16 +60,9 @@ export function mountEditor(root,token,p){
     },600);
   }
   async function flush(){clearTimeout(saveTimer);await saveQueued();setSaveStatus('Сохранено');}
-  function applyPan(){
-    const maxX=Math.max(0,(stageShell.offsetWidth-viewport.clientWidth)/2);
-    const maxY=Math.max(0,(stageShell.offsetHeight-viewport.clientHeight)/2);
-    panX=clamp(panX,-maxX,maxX);panY=clamp(panY,-maxY,maxY);
-    stageShell.style.transform=`translate(-50%,-50%) translate(${panX}px,${panY}px)`;
-  }
-  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();renderProps();renderLibrary();renderAudio();}
-  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();}
-  function collapseTools(){selected=null;libraryOpen=false;renderCanvas();renderProps();renderLibrary();}
-  function choose(id){selected=id;if(mobile)libraryOpen=false;renderCanvas();renderProps();renderLibrary();}
+  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);renderProps();renderLibrary();renderAudio();}
+  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);}
+  function choose(id){selected=id;if(mobile)libraryOpen=false;renderCanvas();renderProps();if(tool==='layers')renderLibrary();}
   const add=e=>{const before=snapshot();p.elements.push(e);selected=e.id;if(mobile)libraryOpen=false;commit(before);render();};
   const base=(type,x=270,y=200,w=250,h=100)=>({id:uid(),type,x,y,w,h,rotate:0,opacity:1});
   function replaceBackground(src){
@@ -88,11 +82,9 @@ export function mountEditor(root,token,p){
     if(tool==='shapes')html+=`<p class="muted">Фигуры и декоративные символы</p><div class="shape-grid">${[['heart','♥'],['star','★'],['circle','●'],['square','■']].map(([k,s])=>`<button data-shape="${k}" class="shape-tile">${s}</button>`).join('')}</div>${stickers.length?`<h3>Стикеры из каталога</h3>${stickers.map(s=>`<button class="tile" data-sticker="${esc(s.id)}">＋ ${esc(s.name)}</button>`).join('')}`:''}`;
     if(tool==='background')html+=`<label>Цвет фона <input id="bg-color" type="color" value="${esc(p.bg)}"></label><div class="swatches">${['#fce8f2','#ffe8da','#dff2e9','#e8e0ff','#d9eeff','#ffffff','#2f2942'].map(c=>`<button data-bg="${c}" style="background:${c}" aria-label="Фон ${c}"></button>`).join('')}</div>${backgrounds.length?`<h3>Фоны из каталога</h3>${backgrounds.map(b=>`<button class="tile" data-catalog-bg="${esc(b.id)}">▧ ${esc(b.name)}</button>`).join('')}`:''}<label class="btn light upload-label">Загрузить свой фон<input hidden type="file" id="background-file" accept="image/png,image/jpeg,image/webp,image/gif"></label><p class="muted">Загруженный фон станет растянутым изображением в нижнем слое.</p>`;
     if(tool==='draw')html+=`<p>Режим рисования: <b>включён</b>. Проведите по холсту мышью или пальцем.</p><label>Цвет кисти <input id="draw-color" type="color" value="#8a5bbf"></label><label>Толщина <input id="draw-size" type="range" min="2" max="35" value="6"></label><button class="btn light" data-tool="layers">Завершить рисование</button>`;
-    if(tool==='layers')html+=`<div class="layer-list">${[...p.elements].reverse().map(e=>`<button class="layer ${selected===e.id?'current':''}" data-layer="${e.id}"><span>${e.type==='text'?'T':e.type==='image'?'▧':e.type==='draw'?'✎':'◇'}</span><span>${esc(e.type==='text'?e.text.slice(0,21):e.type==='image'?'Изображение':e.type==='draw'?'Рисунок':e.kind)}</span></button>`).join('')||'<p class="muted">На холсте пока нет элементов</p>'}</div>`;
+    if(tool==='layers')html+=`<div class="layer-list">${[...p.elements].reverse().map(e=>`<button class="layer ${selected===e.id?'current':''}" data-layer="${esc(e.id)}"><span>${e.type==='text'?'T':e.type==='image'?'▧':e.type==='draw'?'✎':'◇'}</span><span>${esc(e.type==='text'?e.text.slice(0,21):e.type==='image'?'Изображение':e.type==='draw'?'Рисунок':e.kind)}</span></button>`).join('')||'<p class="muted">На холсте пока нет элементов</p>'}</div>`;
     if(tool==='audio')html+=`<button class="btn primary wide" data-audio="record">Записать голос</button><label class="btn light wide upload-label">Загрузить голос<input hidden type="file" id="voice-file" accept="audio/*"></label><hr><h3>Музыкальная подборка</h3>${melodies.map(m=>`<button class="tile" data-melody="${m.id}">♫ ${esc(m.name)}${m.artist?' · '+esc(m.artist):''}</button>`).join('')}<label class="btn light wide upload-label">Загрузить свою музыку<input hidden type="file" id="music-file" accept="audio/*"></label>`;
     library.innerHTML=html;
-    library.hidden=!libraryOpen;
-    library.style.setProperty('display',libraryOpen?'':'none',libraryOpen?'':'important');
     library.classList.toggle('mobile-hidden',mobile&&!libraryOpen);
     properties.classList.toggle('is-open',mobile&&!!selected&&!libraryOpen);
     if(tool==='images'){
@@ -106,9 +98,7 @@ export function mountEditor(root,token,p){
   }
   function renderProps(){
     const e=p.elements.find(o=>o.id===selected);
-    const propsOpen=mobile&&!!e&&!libraryOpen;
-    properties.classList.toggle('is-open',propsOpen);
-    properties.style.display=mobile?(propsOpen?'block':'none'):'';
+    properties.classList.toggle('is-open',mobile&&!!e&&!libraryOpen);
     if(!e){properties.innerHTML=`<h2>Настройки холста</h2><p class="muted">Выберите объект для редактирования.</p><label>Формат<select id="side-format">${formatOptions(p)}</select></label><label>Фон<input type="color" data-canvas-color value="${esc(p.bg)}"></label>`;return;}
     let html=`<div class="props-head"><h2>Свойства: ${({text:'Текст',image:'Изображение',shape:'Фигура',draw:'Рисунок'})[e.type]}</h2><button class="icon-button" data-prop-action="delete" title="Удалить">×</button></div>`;
     if(e.type==='text')html+=`<label>Текст<textarea rows="3" data-prop="text">${esc(e.text)}</textarea></label><label>Шрифт<select data-prop="font"><option value="serif" ${e.font==='serif'?'selected':''}>С засечками</option><option value="sans" ${e.font==='sans'?'selected':''}>Без засечек</option><option value="mono" ${e.font==='mono'?'selected':''}>Моноширинный</option></select></label><label>Размер шрифта<input type="number" min="8" max="150" data-prop="size" value="${e.size}"></label><label>Выравнивание<select data-prop="align"><option value="center">По центру</option><option value="left" ${e.align==='left'?'selected':''}>Слева</option><option value="right" ${e.align==='right'?'selected':''}>Справа</option></select></label>`;
@@ -122,16 +112,35 @@ export function mountEditor(root,token,p){
     <div class="audio-track"><b>🎙 Голос</b><span>${esc(p.voice?.name||'Не добавлен')}</span><label>Громкость <input type="range" data-volume="voice" min="0" max="1" step="0.05" value="${p.voiceVolume}"></label><button class="btn light" data-audio="record">${p.voice?'Заменить':'Добавить'}</button></div>
     <div class="audio-track"><b>♫ Музыка</b><span>${esc(p.music?.name||'Не выбрана')}</span><label>Громкость <input type="range" data-volume="music" min="0" max="1" step="0.05" value="${p.musicVolume}"></label><button class="btn light" data-audio="choose">Выбрать</button></div>`;
   }
+  // Read dimensions locally before upload; works with JPEG, PNG, WebP and GIF.
+  function imageDimensions(file){
+    return new Promise((resolve,reject)=>{
+      const objectURL=URL.createObjectURL(file),img=new Image();
+      const cleanup=()=>URL.revokeObjectURL(objectURL);
+      img.onload=()=>{const dimensions={width:img.naturalWidth,height:img.naturalHeight};cleanup();dimensions.width&&dimensions.height?resolve(dimensions):reject(Error('Не удалось определить размер изображения'));};
+      img.onerror=()=>{cleanup();reject(Error('Не удалось прочитать изображение'));};
+      img.src=objectURL;
+    });
+  }
+  function fitDimensions(width,height,maxWidth,maxHeight){
+    const scale=Math.min(maxWidth/width,maxHeight/height,1);
+    return {w:Math.max(1,Math.round(width*scale)),h:Math.max(1,Math.round(height*scale))};
+  }
   async function handleFile(file,kind){
     if(!file)return;
     const image=kind==='image'||kind==='background'||kind==='replace';
     if(!file.type.startsWith(image?'image/':'audio/'))return toast('Неподдерживаемый тип файла');
     if(file.size>(image?MAX_IMAGE_MB:MAX_AUDIO_MB)*1024*1024)return toast('Файл превышает допустимый размер');
     try{
-      const {url}=await api.upload(file),before=snapshot();
-      if(kind==='image')add({...base('image',180,180,420,310),src:url});
+      const dimensions=image?await imageDimensions(file):null;
+      const {url}=await api.upload(file,token),before=snapshot();
+      if(kind==='image'){
+        const {w,h}=fitDimensions(dimensions.width,dimensions.height,420,310);
+        add({...base('image',180,180,w,h),src:url});
+      }
       else if(kind==='replace'){
-        const e=p.elements.find(v=>v.id===selected);if(e){e.src=url;commit(before);render();}
+        const e=p.elements.find(v=>v.id===selected);
+        if(e){const {w,h}=fitDimensions(dimensions.width,dimensions.height,e.w,e.h);e.src=url;e.w=w;e.h=h;commit(before);render();}
       }else if(kind==='background'){
         replaceBackground(url);commit(before);render();
       }else {p[kind]={src:url,name:file.name};commit(before);renderAudio();}
@@ -165,7 +174,18 @@ export function mountEditor(root,token,p){
     const key=e.target.dataset.prop;if(!key)return;
     const obj=p.elements.find(o=>o.id===selected);if(!obj)return;
     const before=snapshot();obj[key]=['size','x','y','w','h','rotate','opacity'].includes(key)?Number(e.target.value):e.target.value;
-    if(['w','h'].includes(key))obj[key]=Math.max(20,obj[key]);
+    if(['w','h'].includes(key)){
+      obj[key]=Math.max(20,obj[key]);
+      if(obj.type==='image'){
+        const ratio=Number(before.elements.find(v=>v.id===obj.id)?.w)/Number(before.elements.find(v=>v.id===obj.id)?.h);
+        if(Number.isFinite(ratio)&&ratio>0){
+          if(key==='w')obj.h=Math.max(1,obj.w/ratio);
+          else obj.w=Math.max(1,obj.h*ratio);
+        }
+        const linked=properties.querySelector(`[data-prop="${key==='w'?'h':'w'}"]`);
+        if(linked)linked.value=Math.round(key==='w'?obj.h:obj.w);
+      }
+    }
     commit(before);renderCanvas();
   });
   properties.addEventListener('change',e=>{if(e.target.id==='side-format')setFormat(e.target.value);});
@@ -182,50 +202,42 @@ export function mountEditor(root,token,p){
   function setFormat(value){if(!formats[value]||value===p.format)return;if(!confirm('При изменении формата расположение элементов может потребовать корректировки. Продолжить?')){$('#format',root).value=p.format;return;}const before=snapshot();p.format=value;commit(before);render();}
   $('#format',root).addEventListener('change',e=>setFormat(e.target.value));
   $('#project-name',root).addEventListener('input',e=>{p.name=e.target.value;dirty();});
-  root.querySelector('.editor-rail').addEventListener('click',e=>{
-    const id=e.target.closest('[data-tool]')?.dataset.tool;if(!id)return;
-    const closeCurrent=tool===id&&libraryOpen;
-    tool=id;libraryOpen=!closeCurrent;renderLibrary();renderProps();
-  });
+  root.querySelector('.editor-rail').addEventListener('click',e=>{const id=e.target.closest('[data-tool]')?.dataset.tool;if(id){tool=id;libraryOpen=true;renderLibrary();renderProps();}});
   // Pointer interaction: dragging, resizing, rotating and freehand drawing.
   stage.addEventListener('pointerdown',e=>{
-    e.stopPropagation();
     const item=e.target.closest('.object');
     const sx=e.clientX,sy=e.clientY;
     if(tool==='draw'){
       const rect=stage.getBoundingClientRect(),start=[(sx-rect.left)/scale,(sy-rect.top)/scale];
       gesture={kind:'draw',points:[start],before:snapshot()};stage.setPointerCapture(e.pointerId);return;
     }
-    if(!item){
-      collapseTools();
-      gesture={kind:'pan',sx,sy,panX,panY};stage.setPointerCapture(e.pointerId);e.preventDefault();return;
-    }
+    if(!item){choose(null);return;}
     const id=item.dataset.id,entry=p.elements.find(v=>v.id===id);if(!entry)return;
-    if(selected!==id||mobile)choose(id);
+    if(selected!==id)choose(id);
     gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot()};
     stage.setPointerCapture(e.pointerId);e.preventDefault();
   });
-  stage.addEventListener('click',e=>e.stopPropagation());
   viewport.addEventListener('pointerdown',e=>{
-    if(e.target.closest('.stage'))return;
-    collapseTools();
-  });
-  root.querySelector('.workspace').addEventListener('click',e=>{
-    if(mobile || e.target.closest('button,input,select,textarea,.stage'))return;
-    collapseTools();
+    if(!mobile || e.target.closest('.stage'))return;
+    libraryOpen=false;
+    selected=null;
+    renderCanvas();renderProps();renderLibrary();
   });
   stage.addEventListener('pointermove',e=>{
     if(!gesture)return;
-    if(gesture.kind==='pan'){
-      panX=gesture.panX+e.clientX-gesture.sx;panY=gesture.panY+e.clientY-gesture.sy;applyPan();return;
-    }
     if(gesture.kind==='draw'){
       const rect=stage.getBoundingClientRect();gesture.points.push([(e.clientX-rect.left)/scale,(e.clientY-rect.top)/scale]);return;
     }
     const ob=p.elements.find(v=>v.id===gesture.id);if(!ob)return;
     const dx=(e.clientX-gesture.sx)/scale,dy=(e.clientY-gesture.sy)/scale;
     if(gesture.kind==='move'){ob.x=gesture.starting.x+dx;ob.y=gesture.starting.y+dy;}
-    if(gesture.kind==='resize'){ob.w=Math.max(30,gesture.starting.w+dx);ob.h=Math.max(30,gesture.starting.h+dy);}
+    if(gesture.kind==='resize'){
+      if(ob.type==='image'){
+        const startW=Math.max(1,gesture.starting.w),startH=Math.max(1,gesture.starting.h);
+        const scaleFactor=Math.max(30/Math.min(startW,startH),1+(dx*startW+dy*startH)/(startW*startW+startH*startH));
+        ob.w=startW*scaleFactor;ob.h=startH*scaleFactor;
+      }else{ob.w=Math.max(30,gesture.starting.w+dx);ob.h=Math.max(30,gesture.starting.h+dy);}
+    }
     if(gesture.kind==='rotate'){ob.rotate=(gesture.starting.rotate||0)+dx*.7;}
     const node=stage.querySelector(`[data-id="${gesture.id}"]`);
     if(node){node.style.left=`${ob.x}px`;node.style.top=`${ob.y}px`;node.style.width=`${ob.w}px`;node.style.height=`${ob.h}px`;node.style.transform=`rotate(${ob.rotate||0}deg)`;}
@@ -233,7 +245,6 @@ export function mountEditor(root,token,p){
   stage.addEventListener('pointerup',e=>{
     if(!gesture)return;
     const g=gesture;gesture=null;
-    if(g.kind==='pan')return;
     if(g.kind==='draw' && g.points.length>1){
       const xs=g.points.map(p=>p[0]),ys=g.points.map(p=>p[1]);const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(20,Math.max(...xs)-x+8),h=Math.max(20,Math.max(...ys)-y+8);
       p.elements.push({...base('draw',x,y,w,h),points:g.points.map(pt=>[pt[0]-x,pt[1]-y]),color:$('#draw-color',library)?.value||'#8a5bbf',size:Number($('#draw-size',library)?.value||6)});
@@ -244,11 +255,10 @@ export function mountEditor(root,token,p){
     const id=e.target.closest('.object')?.dataset.id;const ob=p.elements.find(v=>v.id===id);
     if(ob?.type==='text'){const result=prompt('Изменить текст',ob.text);if(result!==null){const before=snapshot();ob.text=result;commit(before);render();}}
   });
-  root.querySelector('.zoom-controls').addEventListener('click',e=>{const a=e.target.closest('[data-zoom]')?.dataset.zoom;if(!a)return;if(a==='fit'){zoom=1;panX=0;panY=0;}else zoom=clamp(zoom*(a==='in'?1.2:1/1.2),.45,2.5);scale=scaleStage(stage,viewport,p,zoom);applyPan();$('#zoom-label',root).textContent=`${Math.round(scale*100)}%`;});
+  root.querySelector('.zoom-controls').addEventListener('click',e=>{const a=e.target.closest('[data-zoom]')?.dataset.zoom;if(!a)return;zoom=a==='fit'?1:clamp(zoom*(a==='in'?1.2:1/1.2),.45,2.5);scale=scaleStage(stage,viewport,p,zoom);$('#zoom-label',root).textContent=`${Math.round(scale*100)}%`;});
   const resizeObserver=new ResizeObserver(()=>{
     if(!stage.isConnected)return;
     scale=scaleStage(stage,viewport,p,zoom);
-    applyPan();
     const label=$('#zoom-label',root);if(label)label.textContent=`${Math.round(scale*100)}%`;
   });
   resizeObserver.observe(viewport);
@@ -256,6 +266,12 @@ export function mountEditor(root,token,p){
     const action=e.target.closest('[data-top]')?.dataset.top;if(!action)return;
     if(action==='undo' && undoStack.length){redoStack.push(snapshot());p=JSON.parse(undoStack.pop());dirty();selected=null;render();}
     if(action==='redo' && redoStack.length){undoStack.push(snapshot());p=JSON.parse(redoStack.pop());dirty();selected=null;render();}
+    if(action==='delete'){
+      if(!confirm('Безвозвратно удалить проект, его опубликованные открытки и загруженные файлы? Отменить нельзя.'))return;
+      try{await api.deleteProject(token);location.hash='#/';toast('Открытка удалена');}
+      catch(err){toast(`Не удалось удалить: ${err.message}`);}
+      return;
+    }
     if(action==='link'){
       const m=modal('Ссылка для редактирования',`<p>Сохраните эту секретную ссылку. Любой, у кого она есть, сможет менять открытку.</p><input readonly value="${esc(linkFor('edit',token))}" /><button class="btn primary wide" id="copy-edit">Скопировать</button>`);
       $('#copy-edit',m).onclick=()=>copy(linkFor('edit',token));

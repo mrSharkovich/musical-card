@@ -12,7 +12,7 @@ const catalogReady=api.getCatalog().then(setCatalog).catch(error=>{
   console.warn('Не удалось загрузить каталог:',error);
 });
 function header(){return `<header class="site-head"><a class="brand" href="#/">♪ Музыкальная открытка</a><nav><a href="#/templates">Шаблоны</a><button data-create class="btn primary">Создать открытку</button></nav></header>`;}
-function footer(){return `<footer class="site-footer">Музыкальная открытка · Без регистрации · Все встроенные оформления созданы для проекта</footer>`;}
+function footer(){return `<footer class="site-footer">Музыкальная открытка · Без регистрации · <a href="/LICENSES.md" target="_blank" rel="noopener noreferrer">Авторы и лицензии встроенных материалов</a></footer>`;}
 async function create(template='blank',format='4:5'){
   await catalogReady;
   const project=newProject('Моя открытка',format,'blank');
@@ -33,8 +33,26 @@ function gallery(){
 }
 function notFound(message){root.innerHTML=`${header()}<main class="site-container error-page"><h1>Не удалось открыть страницу</h1><p>${esc(message)}</p><a class="btn primary" href="#/">На главную</a></main>${footer()}`;}
 function scaleViewer(p){const stage=$('#viewer-stage'),viewport=$('#viewer-viewport');if(stage&&viewport)scaleStage(stage,viewport,p);}
-function showViewer(p,{preview=false,token=''}={}){
+function showViewer(p,{preview=false,token='',credits=[]}={}){
   root.innerHTML=`<div class="viewer-page"><header class="viewer-head"><a href="${preview?`#/edit/${encodeURIComponent(token)}`:'#/'}" class="btn light">${preview?'← В редактор':'♪ На главную'}</a><span>${preview?'Предпросмотр':'Для вас музыкальная открытка'}</span></header><main class="viewer-main"><div id="viewer-viewport" class="viewer-viewport"><div class="stage-shell"><div id="viewer-stage" class="stage"></div></div><div class="unveil" id="unveil"><div class="unveil-content"><div class="play-disc">▶</div><h1>Для вас приготовлено поздравление!</h1><p>Подключите наушники или настройте громкость на устройстве.</p><button class="btn primary big" id="start-view">Открыть и прослушать</button></div></div></div><div class="viewer-player"><button class="btn light" id="viewer-toggle" disabled>▶ Воспроизвести заново</button><span class="muted">Голос и музыка запускаются одновременно</span></div></main></div>`;
+  if(credits.length){
+    const box=document.createElement('details');box.className='viewer-credits';
+    const summary=document.createElement('summary');summary.textContent='Авторы и лицензии использованных материалов';box.append(summary);
+    for(const credit of credits){
+      const line=document.createElement('p');line.textContent=credit.text+' ';
+      if(credit.licenseUrl && /^https:\/\/creativecommons\.org\/licenses\//.test(credit.licenseUrl)){
+        const a=document.createElement('a');a.href=credit.licenseUrl;a.textContent=credit.license;
+        a.rel='noopener noreferrer';a.target='_blank';line.append(a);
+      }
+      if(credit.sourceUrl && /^https:\/\//.test(credit.sourceUrl)){
+        const source=document.createElement('a');source.href=credit.sourceUrl;
+        source.textContent='Источник';source.rel='noopener noreferrer';source.target='_blank';
+        line.append(' · ',source);
+      }
+      box.append(line);
+    }
+    document.querySelector('.viewer-main').append(box);
+  }
   const stage=$('#viewer-stage');renderStage(stage,p);scaleViewer(p);
   const observer=new ResizeObserver(()=>scaleViewer(p));observer.observe($('#viewer-viewport'));
   const player=new CardAudio();let started=false;
@@ -72,7 +90,7 @@ async function publicPage(publicId){
     $('#refresh-card').onclick=()=>route();return;
   }
   if(res.status!=='ready'||!res.project)throw Error('Открытка недоступна');
-  showViewer(res.project);
+  showViewer(res.project,{credits:res.credits||[]});
 }
 async function route(){
   cleanup();cleanup=()=>{};
