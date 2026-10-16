@@ -73,6 +73,8 @@ h1,h2,h3,p{margin-top:0}h1{font-size:clamp(32px,4.5vw,56px);line-height:1.12}h2{
 .object.selected{outline:2px solid #8854d1;outline-offset:2px}
 .object .text-content{white-space:pre-wrap;overflow-wrap:anywhere;width:100%;line-height:1.2;pointer-events:none}
 .object img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+.object.background-object{pointer-events:none}
+.object.background-object img{object-fit:cover}
 .shape-content{font-family:Georgia,serif;line-height:1;display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:min(140px,12vw)}
 .resize-knob{position:absolute;width:22px;height:22px;right:-12px;bottom:-12px;border:3px solid #8854d1;background:#fff;border-radius:50%;cursor:nwse-resize}
 .rotate-knob{position:absolute;right:-13px;top:-38px;border:2px solid #8854d1;background:#fff;border-radius:50%;width:30px;height:30px;font-size:22px;text-align:center;color:#8854d1;cursor:grab}

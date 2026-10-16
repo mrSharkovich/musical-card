@@ -17,7 +17,7 @@ function elementHTML(e,selected){
   if(e.type==='shape')content=`<span class="shape-content ${e.kind==='star'?'star':''}" style="color:${esc(e.color)}">${e.kind==='star'?'★':e.kind==='circle'?'●':e.kind==='square'?'■':'♥'}</span>`;
   if(e.type==='image')content=`<img draggable="false" alt="Загруженное изображение" data-ref="${esc(e.src)}" />`;
   if(e.type==='draw')content=`<svg width="100%" height="100%" viewBox="0 0 ${n(e.w,100)} ${n(e.h,100)}" preserveAspectRatio="none"><polyline fill="none" stroke="${esc(e.color)}" stroke-width="${n(e.size,5)}" stroke-linecap="round" stroke-linejoin="round" points="${Array.isArray(e.points)?e.points.slice(0,3000).filter(p=>Array.isArray(p)&&p.length===2).map(p=>`${n(p[0])},${n(p[1])}`).join(' '):''}" /></svg>`;
-  return `<div class="object ${selected===e.id?'selected':''}" data-id="${esc(e.id)}" style="${style}">${content}${selected===e.id?'<span class="resize-knob" data-handle="resize"></span><span class="rotate-knob" data-handle="rotate">↻</span>':''}</div>`;
+  return `<div class="object ${e.isBackground?'background-object':''} ${selected===e.id?'selected':''}" data-id="${esc(e.id)}" style="${style}">${content}${selected===e.id?'<span class="resize-knob" data-handle="resize"></span><span class="rotate-knob" data-handle="rotate">↻</span>':''}</div>`;
 }
 export function renderStage(host,p,selected=null){
   if(!host) return;
