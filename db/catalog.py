@@ -71,6 +71,7 @@ class Catalog:
             "credit": row["attribution_text"],
             "license": row["license_code"],
             "licenseUrl": row["license_url"],
+            "sourceUrl": row["source_url"],
             "commercialUse": bool(row["commercial_use"]),
         }
         if row["kind"] == "synth":
@@ -186,6 +187,7 @@ class Catalog:
             "author": row["author"],
             "license": row["license_code"],
             "licenseUrl": row["license_url"],
+            "sourceUrl": row["source_url"],
             "commercialUse": bool(row["commercial_use"]),
         }
         if table == "backgrounds":
