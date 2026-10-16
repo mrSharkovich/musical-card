@@ -186,6 +186,12 @@ export function mountEditor(root,token,p){
     gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot()};
     stage.setPointerCapture(e.pointerId);e.preventDefault();
   });
+  viewport.addEventListener('pointerdown',e=>{
+    if(!mobile || e.target.closest('.stage'))return;
+    libraryOpen=false;
+    selected=null;
+    renderCanvas();renderProps();renderLibrary();
+  });
   stage.addEventListener('pointermove',e=>{
     if(!gesture)return;
     if(gesture.kind==='draw'){

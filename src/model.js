@@ -1,5 +1,18 @@
 export const formats = {'4:5':1000, '1:1':800, '9:16':1422, '16:9':450};
-export const uid = () => crypto.randomUUID();
+let fallbackIdCounter = 0;
+export const uid = () => {
+  const webCrypto = globalThis.crypto;
+  if (typeof webCrypto?.randomUUID === 'function') return webCrypto.randomUUID();
+
+  const values = new Uint32Array(4);
+  if (typeof webCrypto?.getRandomValues === 'function') {
+    webCrypto.getRandomValues(values);
+    return `local-${Array.from(values, value => value.toString(36)).join('-')}`;
+  }
+
+  fallbackIdCounter += 1;
+  return `local-${Date.now().toString(36)}-${fallbackIdCounter}-${Math.random().toString(36).slice(2)}`;
+};
 export const esc = value => String(value ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 export const clamp = (v,min,max) => Math.min(max,Math.max(min,v));
 const text = (label,x,y,w,size,color='#603d73') => ({id:uid(),type:'text',text:label,x,y,w,h:size*2.0,size,color,rotate:0,font:'serif'});
