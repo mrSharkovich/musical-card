@@ -8,7 +8,7 @@ import {MAX_IMAGE_MB,MAX_AUDIO_MB} from './config.js';
 const menu=[['templates','Шаблоны'],['text','Текст'],['images','Изображения'],['shapes','Элементы'],['background','Фоны'],['draw','Рисование'],['layers','Слои'],['audio','Аудио']];
 const formatOptions=p=>Object.keys(formats).map(f=>`<option value="${f}" ${p.format===f?'selected':''}>${f}</option>`).join('');
 export function mountEditor(root,token,p){
-  let tool='templates',selected=null,zoom=1,scale=1,gesture=null,saveTimer=null,changeNumber=0,recording=null;
+  let tool='templates',selected=null,zoom=1,scale=1,panX=0,panY=0,gesture=null,saveTimer=null,changeNumber=0,recording=null;
   let saveFlight=Promise.resolve();
   const mobile=matchMedia('(max-width:750px)').matches;
   let libraryOpen=!mobile;
@@ -40,7 +40,7 @@ export function mountEditor(root,token,p){
     </div>
     <footer class="audio-panel" id="audio-panel"></footer>
   </div>`;
-  const stage=$('#stage',root),viewport=$('#viewport',root),library=$('#library',root),properties=$('#properties',root);
+  const stage=$('#stage',root),viewport=$('#viewport',root),library=$('#library',root),properties=$('#properties',root),stageShell=stage.parentElement;
   const undoStack=[],redoStack=[];
   const snapshot=()=>JSON.stringify(p);
   function commit(before){if(before!==snapshot()){undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack.length=0;dirty();}}
@@ -60,8 +60,15 @@ export function mountEditor(root,token,p){
     },600);
   }
   async function flush(){clearTimeout(saveTimer);await saveQueued();setSaveStatus('Сохранено');}
-  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);renderProps();renderLibrary();renderAudio();}
-  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);}
+  function applyPan(){
+    const maxX=Math.max(0,(stageShell.offsetWidth-viewport.clientWidth)/2);
+    const maxY=Math.max(0,(stageShell.offsetHeight-viewport.clientHeight)/2);
+    panX=clamp(panX,-maxX,maxX);panY=clamp(panY,-maxY,maxY);
+    stageShell.style.transform=`translate(-50%,-50%) translate(${panX}px,${panY}px)`;
+  }
+  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();renderProps();renderLibrary();renderAudio();}
+  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();}
+  function collapseTools(){selected=null;libraryOpen=false;renderCanvas();renderProps();renderLibrary();}
   function choose(id){selected=id;if(mobile)libraryOpen=false;renderCanvas();renderProps();if(tool==='layers')renderLibrary();}
   const add=e=>{const before=snapshot();p.elements.push(e);selected=e.id;if(mobile)libraryOpen=false;commit(before);render();};
   const base=(type,x=270,y=200,w=250,h=100)=>({id:uid(),type,x,y,w,h,rotate:0,opacity:1});
@@ -85,6 +92,8 @@ export function mountEditor(root,token,p){
     if(tool==='layers')html+=`<div class="layer-list">${[...p.elements].reverse().map(e=>`<button class="layer ${selected===e.id?'current':''}" data-layer="${esc(e.id)}"><span>${e.type==='text'?'T':e.type==='image'?'▧':e.type==='draw'?'✎':'◇'}</span><span>${esc(e.type==='text'?e.text.slice(0,21):e.type==='image'?'Изображение':e.type==='draw'?'Рисунок':e.kind)}</span></button>`).join('')||'<p class="muted">На холсте пока нет элементов</p>'}</div>`;
     if(tool==='audio')html+=`<button class="btn primary wide" data-audio="record">Записать голос</button><label class="btn light wide upload-label">Загрузить голос<input hidden type="file" id="voice-file" accept="audio/*"></label><hr><h3>Музыкальная подборка</h3>${melodies.map(m=>`<button class="tile" data-melody="${m.id}">♫ ${esc(m.name)}${m.artist?' · '+esc(m.artist):''}</button>`).join('')}<label class="btn light wide upload-label">Загрузить свою музыку<input hidden type="file" id="music-file" accept="audio/*"></label>`;
     library.innerHTML=html;
+    library.hidden=!libraryOpen;
+    library.style.setProperty('display',libraryOpen?'':'none',libraryOpen?'':'important');
     library.classList.toggle('mobile-hidden',mobile&&!libraryOpen);
     properties.classList.toggle('is-open',mobile&&!!selected&&!libraryOpen);
     if(tool==='images'){
@@ -202,29 +211,43 @@ export function mountEditor(root,token,p){
   function setFormat(value){if(!formats[value]||value===p.format)return;if(!confirm('При изменении формата расположение элементов может потребовать корректировки. Продолжить?')){$('#format',root).value=p.format;return;}const before=snapshot();p.format=value;commit(before);render();}
   $('#format',root).addEventListener('change',e=>setFormat(e.target.value));
   $('#project-name',root).addEventListener('input',e=>{p.name=e.target.value;dirty();});
-  root.querySelector('.editor-rail').addEventListener('click',e=>{const id=e.target.closest('[data-tool]')?.dataset.tool;if(id){tool=id;libraryOpen=true;renderLibrary();renderProps();}});
+  root.querySelector('.editor-rail').addEventListener('click',e=>{
+    const id=e.target.closest('[data-tool]')?.dataset.tool;if(!id)return;
+    const closeCurrent=tool===id&&libraryOpen;
+    tool=id;libraryOpen=!closeCurrent;renderLibrary();renderProps();
+  });
   // Pointer interaction: dragging, resizing, rotating and freehand drawing.
   stage.addEventListener('pointerdown',e=>{
+    e.stopPropagation();
     const item=e.target.closest('.object');
     const sx=e.clientX,sy=e.clientY;
     if(tool==='draw'){
       const rect=stage.getBoundingClientRect(),start=[(sx-rect.left)/scale,(sy-rect.top)/scale];
       gesture={kind:'draw',points:[start],before:snapshot()};stage.setPointerCapture(e.pointerId);return;
     }
-    if(!item){choose(null);return;}
+    if(!item){
+      collapseTools();
+      gesture={kind:'pan',sx,sy,panX,panY};stage.setPointerCapture(e.pointerId);e.preventDefault();return;
+    }
     const id=item.dataset.id,entry=p.elements.find(v=>v.id===id);if(!entry)return;
     if(selected!==id)choose(id);
     gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot()};
     stage.setPointerCapture(e.pointerId);e.preventDefault();
   });
+  stage.addEventListener('click',e=>e.stopPropagation());
   viewport.addEventListener('pointerdown',e=>{
-    if(!mobile || e.target.closest('.stage'))return;
-    libraryOpen=false;
-    selected=null;
-    renderCanvas();renderProps();renderLibrary();
+    if(e.target.closest('.stage'))return;
+    collapseTools();
+  });
+  root.querySelector('.workspace').addEventListener('click',e=>{
+    if(mobile || e.target.closest('button,input,select,textarea,.stage'))return;
+    collapseTools();
   });
   stage.addEventListener('pointermove',e=>{
     if(!gesture)return;
+    if(gesture.kind==='pan'){
+      panX=gesture.panX+e.clientX-gesture.sx;panY=gesture.panY+e.clientY-gesture.sy;applyPan();return;
+    }
     if(gesture.kind==='draw'){
       const rect=stage.getBoundingClientRect();gesture.points.push([(e.clientX-rect.left)/scale,(e.clientY-rect.top)/scale]);return;
     }
@@ -245,6 +268,7 @@ export function mountEditor(root,token,p){
   stage.addEventListener('pointerup',e=>{
     if(!gesture)return;
     const g=gesture;gesture=null;
+    if(g.kind==='pan')return;
     if(g.kind==='draw' && g.points.length>1){
       const xs=g.points.map(p=>p[0]),ys=g.points.map(p=>p[1]);const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(20,Math.max(...xs)-x+8),h=Math.max(20,Math.max(...ys)-y+8);
       p.elements.push({...base('draw',x,y,w,h),points:g.points.map(pt=>[pt[0]-x,pt[1]-y]),color:$('#draw-color',library)?.value||'#8a5bbf',size:Number($('#draw-size',library)?.value||6)});
@@ -255,10 +279,11 @@ export function mountEditor(root,token,p){
     const id=e.target.closest('.object')?.dataset.id;const ob=p.elements.find(v=>v.id===id);
     if(ob?.type==='text'){const result=prompt('Изменить текст',ob.text);if(result!==null){const before=snapshot();ob.text=result;commit(before);render();}}
   });
-  root.querySelector('.zoom-controls').addEventListener('click',e=>{const a=e.target.closest('[data-zoom]')?.dataset.zoom;if(!a)return;zoom=a==='fit'?1:clamp(zoom*(a==='in'?1.2:1/1.2),.45,2.5);scale=scaleStage(stage,viewport,p,zoom);$('#zoom-label',root).textContent=`${Math.round(scale*100)}%`;});
+  root.querySelector('.zoom-controls').addEventListener('click',e=>{const a=e.target.closest('[data-zoom]')?.dataset.zoom;if(!a)return;if(a==='fit'){zoom=1;panX=0;panY=0;}else zoom=clamp(zoom*(a==='in'?1.2:1/1.2),.45,2.5);scale=scaleStage(stage,viewport,p,zoom);applyPan();$('#zoom-label',root).textContent=`${Math.round(scale*100)}%`;});
   const resizeObserver=new ResizeObserver(()=>{
     if(!stage.isConnected)return;
     scale=scaleStage(stage,viewport,p,zoom);
+    applyPan();
     const label=$('#zoom-label',root);if(label)label.textContent=`${Math.round(scale*100)}%`;
   });
   resizeObserver.observe(viewport);
