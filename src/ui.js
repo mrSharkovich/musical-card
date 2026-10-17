@@ -33,6 +33,31 @@ export async function copy(text){
     const input=m.querySelector('input');input.addEventListener('focus',()=>input.select());input.focus();
   }
 }
+export async function shareLink({title='Музыкальная открытка',text='',url}){
+  if(typeof navigator.share==='function'){
+    try{await navigator.share({title,text,url});return;}
+    catch(error){if(error?.name==='AbortError')return;}
+  }
+  const chooser=modal('Отправить ссылку',`<p>Выберите, куда отправить открытку.</p><div class="menu-list">
+    <button type="button" class="btn light" data-share-via="telegram">Telegram</button>
+    <button type="button" class="btn light" data-share-via="whatsapp">WhatsApp</button>
+    <button type="button" class="btn light" data-share-via="vk">ВКонтакте</button>
+    <button type="button" class="btn primary" data-share-via="copy">Скопировать ссылку</button>
+  </div>`);
+  chooser.addEventListener('click',async event=>{
+    const via=event.target.closest('[data-share-via]')?.dataset.shareVia;
+    if(!via)return;
+    if(via==='copy'){chooser.close();await copy(url);return;}
+    const message=text?`${text}\n${url}`:url;
+    const targets={
+      telegram:`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+      whatsapp:`https://wa.me/?text=${encodeURIComponent(message)}`,
+      vk:`https://vk.com/share.php?url=${encodeURIComponent(url)}`,
+    };
+    chooser.close();
+    window.open(targets[via],'_blank','noopener,noreferrer');
+  });
+}
 export const button=(label,action='',kind='')=>`<button class="btn ${kind}" ${action?`data-action="${action}"`:''}>${esc(label)}</button>`;
 
 /** Цвет из каталога или проекта допускается только в виде #RRGGBB (защита от CSS-инъекций). */
