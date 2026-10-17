@@ -17,7 +17,7 @@ const catalogReady=api.getCatalog().then(setCatalog).catch(error=>{
 
 function header(){
   return `<header class="site-head"><a class="brand" href="#/">${brandMark(30)}<span>Музыкальная открытка</span></a>
-  <nav aria-label="Основное меню"><a class="nav-link" href="#/templates">Шаблоны</a>${themeButton()}<button type="button" data-create class="btn primary">${icon('send',17)}<span>Создать открытку</span></button></nav></header>`;
+  <nav aria-label="Основное меню"><a class="nav-link" href="#/templates">Шаблоны</a>${themeButton()}<button type="button" data-create class="btn primary" aria-label="Создать открытку">${icon('send',17)}<span>Создать открытку</span></button></nav></header>`;
 }
 function footer(){
   return `<footer class="site-footer"><b>Музыкальная открытка</b><span>Без регистрации</span><a href="/LICENSES.md" target="_blank" rel="noopener noreferrer">Авторы и лицензии встроенных материалов</a></footer>`;

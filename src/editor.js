@@ -246,8 +246,11 @@ export function mountEditor(root,token,p){
       gesture={kind:'pan',sx,sy,panX,panY};stage.setPointerCapture(e.pointerId);e.preventDefault();return;
     }
     const id=item.dataset.id,entry=p.elements.find(v=>v.id===id);if(!entry)return;
-    if(selected!==id)choose(id);
-    gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot()};
+    // On touch screens a drag must not open the bottom properties panel.
+    // A panel is opened only on pointerup when no meaningful movement occurred.
+    if(mobile){selected=id;properties.classList.remove('is-open');renderCanvas();}
+    else if(selected!==id)choose(id);
+    gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot(),moved:false};
     stage.setPointerCapture(e.pointerId);e.preventDefault();
   });
   stage.addEventListener('click',e=>e.stopPropagation());
@@ -261,6 +264,10 @@ export function mountEditor(root,token,p){
   });
   stage.addEventListener('pointermove',e=>{
     if(!gesture)return;
+    if(mobile&&!gesture.moved&&Math.hypot(e.clientX-gesture.sx,e.clientY-gesture.sy)>7){
+      gesture.moved=true;
+      properties.classList.remove('is-open');
+    }
     if(gesture.kind==='pan'){
       panX=gesture.panX+e.clientX-gesture.sx;panY=gesture.panY+e.clientY-gesture.sy;applyPan();return;
     }
@@ -285,11 +292,14 @@ export function mountEditor(root,token,p){
     if(!gesture)return;
     const g=gesture;gesture=null;
     if(g.kind==='pan')return;
+    if(mobile&&g.kind==='move'&&!g.moved){choose(g.id);return;}
     if(g.kind==='draw' && g.points.length>1){
       const xs=g.points.map(p=>p[0]),ys=g.points.map(p=>p[1]);const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(20,Math.max(...xs)-x+8),h=Math.max(20,Math.max(...ys)-y+8);
       p.elements.push({...base('draw',x,y,w,h),points:g.points.map(pt=>[pt[0]-x,pt[1]-y]),color:$('#draw-color',library)?.value||'#8a5bbf',size:Number($('#draw-size',library)?.value||6)});
     }
-    commit(g.before);renderCanvas();renderProps();if(tool==='layers')renderLibrary();
+    commit(g.before);renderCanvas();
+    if(!mobile||!g.moved)renderProps();
+    if(tool==='layers')renderLibrary();
   });
   stage.addEventListener('dblclick',e=>{
     const id=e.target.closest('.object')?.dataset.id;const ob=p.elements.find(v=>v.id===id);

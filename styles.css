@@ -607,8 +607,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
 }
 @media (max-width:750px){
   h1{font-size:clamp(32px,9vw,44px)}
-  .site-head{min-height:60px;padding:8px 12px;gap:8px}
-  .site-head nav{gap:6px}
+  .site-head{min-height:60px;padding:8px 12px;gap:6px;flex-wrap:nowrap}
+  .site-head nav{gap:6px;flex-wrap:nowrap}
   .site-head nav a.nav-link{display:none}
   .site-head .btn{min-height:40px;padding:8px 14px;font-size:13px}
   .brand{font-size:16px}
@@ -675,6 +675,13 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
   .unveil-content h1{font-size:28px}
 }
 @media (max-width:420px){
+  .site-head{gap:2px;padding:6px}
+  .site-head .brand{gap:3px;font-size:clamp(14px,4.25vw,17px);letter-spacing:-.06em;white-space:nowrap}
+  .site-head .brand-mark{width:20px;height:20px}
+  .site-head nav{gap:2px}
+  .site-head [data-theme-toggle]{width:32px;height:32px}
+  .site-head [data-create]{min-width:0;min-height:32px;padding:6px 7px;gap:3px;font-size:10.5px}
+  .site-head [data-create] svg{width:14px;height:14px}
   .gallery-grid{gap:22px 10px}
   .rail-btn{min-width:58px}
   .editor-top .back{width:38px}
