@@ -7,7 +7,7 @@
 См. **[`INSTALL_RU.md`](INSTALL_RU.md)** — резервное копирование, безопасная замена файлов, установка зависимостей, 44 автоматических теста, проверка в браузере и порядок отката.
 
 ```powershell
-cd "C:\Users\vboxuser\Desktop\musical-card"
+cd ".\musical-card"
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
 $env:TRUSTED_HOSTS="localhost,127.0.0.1,192.168.1.102"
 .\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8001 --workers 1 --no-access-log --no-proxy-headers
