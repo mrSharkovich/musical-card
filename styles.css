@@ -570,6 +570,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
 .workspace-top{flex:none;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 12px;min-height:40px;font-size:13px;font-weight:700;color:var(--muted)}
 .workspace-top select{min-height:36px;padding:4px 10px;border-radius:999px}
 .workspace-top .hint{font:700 18px var(--hand)}
+.edit-selected{display:none}
 .viewport{flex:1;min-height:0;min-width:0;overflow:hidden;position:relative;touch-action:none}
 .viewport .stage-shell{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .stage-shell{position:relative;flex:none;box-shadow:var(--shadow-lg);border-radius:3px}
@@ -622,6 +623,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
 .dialog-body{padding:10px 22px 24px;line-height:1.55}
 .dialog-body input:not([type=file]){width:100%}
 .dialog-body .btn + .btn{margin-left:6px}
+.upload-rights-check{display:flex;align-items:center;gap:8px;margin:16px 0;font-weight:700;cursor:pointer}
+.dialog-body .upload-rights-check input{width:18px;height:18px;flex:none}
 .menu-list{display:flex;flex-direction:column;gap:8px}
 .menu-list .btn{justify-content:flex-start;width:100%}
 .rec-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0 14px}
@@ -684,6 +687,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
   .workspace{flex:1;order:1}
   .workspace-top{padding:0 10px;min-height:36px}
   .workspace-top .hint{display:none}
+  .workspace-top .edit-selected{display:inline-grid;width:34px;height:34px;min-height:34px;margin-left:auto;border:1.5px solid var(--line);background:var(--paper)}
+  .workspace-top .edit-selected:disabled{opacity:.45;cursor:default}
   .zoom-controls{padding:0 10px 4px;min-height:40px;justify-content:center}
   .editor-rail{
     position:relative;order:3;left:auto;bottom:auto;transform:none;max-width:none;width:100%;
