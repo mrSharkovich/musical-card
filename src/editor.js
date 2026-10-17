@@ -12,11 +12,14 @@ const FONT_OPTIONS=[['hand','От руки (Caveat)'],['round','Округлый
 
 const menu=[['templates','Шаблоны'],['text','Текст'],['images','Изображения'],['shapes','Элементы'],['background','Фоны'],['draw','Рисование'],['layers','Слои'],['audio','Аудио']];
 const formatOptions=p=>Object.keys(formats).map(f=>`<option value="${f}" ${p.format===f?'selected':''}>${f}</option>`).join('');
+const UPLOAD_RIGHTS_NOTICE_KEY_PREFIX='mc:upload-rights-notice-disabled:';
+const VOICE_RIGHTS_NOTICE_KEY_PREFIX='mc:voice-rights-notice-disabled:';
 export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDeleted=()=>{}}={}){
   let tool='templates',selected=null,zoom=1,scale=1,panX=0,panY=0,gesture=null,saveTimer=null,changeNumber=0,recording=null;
   let saveFlight=Promise.resolve();
   const mobile=matchMedia('(max-width:750px)').matches;
   let libraryOpen=!mobile;
+  let propertiesOpen=!mobile;
   const player=new CardAudio();
   root.innerHTML=`<div class="editor-shell">
     <header class="editor-top">
@@ -39,7 +42,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       </nav>
       <aside class="library" id="library"></aside>
       <main class="workspace">
-        <div class="workspace-top"><span>Холст: <select id="format">${formatOptions(p)}</select></span><span class="hint">Перетаскивайте объекты • дважды нажмите текст для редактирования</span></div>
+        <div class="workspace-top"><span>Холст: <select id="format">${formatOptions(p)}</select></span><button type="button" class="icon-button edit-selected" id="edit-selected" aria-label="Редактировать выбранный элемент" title="Редактировать выбранный элемент" disabled>${icon('draw',18)}</button><span class="hint">Перетаскивайте объекты • дважды нажмите текст для редактирования</span></div>
         <div class="viewport" id="viewport"><div class="stage-shell"><div class="stage" id="stage"></div></div></div>
         <div class="zoom-controls"><button type="button" class="icon-button" data-zoom="out" aria-label="Уменьшить">${icon('minus',18)}</button><output id="zoom-label">100%</output><button type="button" class="icon-button" data-zoom="in" aria-label="Увеличить">${icon('plus',18)}</button><button type="button" class="btn light" data-zoom="fit">${icon('fit',16)}Уместить</button></div>
       </main>
@@ -73,11 +76,12 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
     panX=clamp(panX,-maxX,maxX);panY=clamp(panY,-maxY,maxY);
     stageShell.style.transform=`translate(-50%,-50%) translate(${panX}px,${panY}px)`;
   }
-  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();renderProps();renderLibrary();renderAudio();}
-  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();}
-  function collapseTools(){selected=null;libraryOpen=false;renderCanvas();renderProps();renderLibrary();}
-  function choose(id){selected=id;if(mobile)libraryOpen=false;renderCanvas();renderProps();if(tool==='layers')renderLibrary();}
-  const add=e=>{const before=snapshot();p.elements.push(e);selected=e.id;if(mobile)libraryOpen=false;commit(before);render();};
+  function syncEditButton(){const editButton=$('#edit-selected',root);if(editButton)editButton.disabled=!selected;}
+  function render(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();syncEditButton();renderProps();renderLibrary();renderAudio();}
+  function renderCanvas(){renderStage(stage,p,selected);scale=scaleStage(stage,viewport,p,zoom);applyPan();syncEditButton();}
+  function collapseTools(){selected=null;libraryOpen=false;propertiesOpen=false;renderCanvas();renderProps();renderLibrary();}
+  function choose(id,{openProperties=!mobile}={}){selected=id;if(mobile){libraryOpen=false;propertiesOpen=openProperties;}renderCanvas();renderProps();if(tool==='layers')renderLibrary();}
+  const add=e=>{const before=snapshot();p.elements.push(e);selected=e.id;if(mobile){libraryOpen=false;propertiesOpen=false;}commit(before);render();};
   const base=(type,x=270,y=200,w=250,h=100)=>({id:uid(),type,x,y,w,h,rotate:0,opacity:1});
   function replaceBackground(src){
     p.elements=p.elements.filter(element=>!element.isBackground);
@@ -102,7 +106,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
     library.hidden=!libraryOpen;
     library.style.setProperty('display',libraryOpen?'':'none',libraryOpen?'':'important');
     library.classList.toggle('mobile-hidden',mobile&&!libraryOpen);
-    properties.classList.toggle('is-open',mobile&&!!selected&&!libraryOpen);
+    properties.classList.toggle('is-open',mobile&&propertiesOpen&&!!selected&&!libraryOpen);
     if(tool==='images'){
       const gallery=$('#asset-gallery',library);
       p.elements.filter(e=>e.type==='image').forEach(async e=>{
@@ -114,7 +118,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
   }
   function renderProps(){
     const e=p.elements.find(o=>o.id===selected);
-    properties.classList.toggle('is-open',mobile&&!!e&&!libraryOpen);
+    properties.classList.toggle('is-open',mobile&&propertiesOpen&&!!e&&!libraryOpen);
     if(!e){properties.innerHTML=`<h2>Настройки холста</h2><p class="muted">Выберите объект для редактирования.</p><label>Формат<select id="side-format">${formatOptions(p)}</select></label><label>Фон<input type="color" data-canvas-color value="${esc(p.bg)}"></label>`;return;}
     let html=`<div class="props-head"><h2>${({text:'Текст',image:'Изображение',shape:'Фигура',draw:'Рисунок'})[e.type]}</h2><span class="row-wrap"><button type="button" class="icon-btn" data-prop-action="delete" title="Удалить" aria-label="Удалить объект">${icon('trash',18)}</button><button type="button" class="icon-btn panel-close" data-prop-action="close" aria-label="Готово">${icon('check',18)}</button></span></div>`;
     if(e.type==='text')html+=`<label>Текст<textarea rows="3" data-prop="text">${esc(e.text)}</textarea></label><label>Шрифт<select data-prop="font">${FONT_OPTIONS.map(([value,label])=>`<option value="${value}" ${(e.font||'serif')===value?'selected':''}>${label}</option>`).join('')}</select></label><label>Размер шрифта<input type="number" min="8" max="150" data-prop="size" value="${e.size}"></label><label>Выравнивание<select data-prop="align"><option value="center">По центру</option><option value="left" ${e.align==='left'?'selected':''}>Слева</option><option value="right" ${e.align==='right'?'selected':''}>Справа</option></select></label>`;
@@ -149,11 +153,47 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
     const scale=Math.min(maxWidth/width,maxHeight/height,1);
     return {w:Math.max(1,Math.round(width*scale)),h:Math.max(1,Math.round(height*scale))};
   }
-  async function handleFile(file,kind){
+  const uploadRightsNoticeKey=`${UPLOAD_RIGHTS_NOTICE_KEY_PREFIX}${token}`;
+  const voiceRightsNoticeKey=`${VOICE_RIGHTS_NOTICE_KEY_PREFIX}${token}`;
+  function rightsNoticeDisabled(){try{return localStorage.getItem(uploadRightsNoticeKey)==='1';}catch{return false;}}
+  function disableRightsNotice(){try{localStorage.setItem(uploadRightsNoticeKey,'1');}catch{}}
+  function voiceRightsNoticeDisabled(){try{return localStorage.getItem(voiceRightsNoticeKey)==='1';}catch{return false;}}
+  function disableVoiceRightsNotice(){try{localStorage.setItem(voiceRightsNoticeKey,'1');}catch{}}
+  function confirmUploadRights(){
+    if(rightsNoticeDisabled())return Promise.resolve(true);
+    return new Promise(resolve=>{
+      let answered=false;
+      const finish=value=>{if(answered)return;answered=true;resolve(value);};
+      const dialog=modal('Права на загружаемые материалы',`<p>Пользователь гарантирует, что обладает всеми необходимыми правами на загружаемые материалы (фото, аудио, текст), а их размещение на Сайте не нарушает авторские и смежные права, а также иные права и законные интересы третьих лиц. В случае возникновения претензий со стороны третьих лиц, Пользователь обязуется урегулировать их своими силами и за свой счет, а также возместить Владельцу сайта все понесенные убытки.</p><label class="upload-rights-check"><input type="checkbox" data-disable-upload-rights-notice />Больше не показывать</label><div class="row-wrap"><button type="button" class="btn light" data-cancel-upload>Отмена</button><button type="button" class="btn primary" data-confirm-upload>Продолжить</button></div>`,{onClose:()=>finish(false)});
+      dialog.addEventListener('click',event=>{
+        if(event.target.closest('[data-cancel-upload]')){dialog.close();return;}
+        if(!event.target.closest('[data-confirm-upload]'))return;
+        if(dialog.querySelector('[data-disable-upload-rights-notice]').checked)disableRightsNotice();
+        finish(true);dialog.close();
+      });
+    });
+  }
+  function confirmVoiceRights(){
+    if(voiceRightsNoticeDisabled())return Promise.resolve(true);
+    return new Promise(resolve=>{
+      let answered=false;
+      const finish=value=>{if(answered)return;answered=true;resolve(value);};
+      const dialog=modal('Согласие на использование голоса',`<p>Загружая аудиоматериалы, Пользователь дает согласие на использование своего голоса и гарантирует, что обладает правами на использование голоса всех лиц, присутствующих в записи. Пользователь подтверждает, что получил от всех участников аудиозаписи письменное согласие на обнародование и дальнейшее использование их голоса (ст. 152.1 ГК РФ) и изображения. В случае предъявления претензий со стороны лиц, чей голос содержится в записи, Пользователь обязуется урегулировать их своими силами и возместить Владельцу сайта все убытки.</p><label class="upload-rights-check"><input type="checkbox" data-disable-voice-rights-notice />Больше не показывать</label><div class="row-wrap"><button type="button" class="btn light" data-cancel-voice>Отмена</button><button type="button" class="btn primary" data-confirm-voice>Продолжить</button></div>`,{onClose:()=>finish(false)});
+      dialog.addEventListener('click',event=>{
+        if(event.target.closest('[data-cancel-voice]')){dialog.close();return;}
+        if(!event.target.closest('[data-confirm-voice]'))return;
+        if(dialog.querySelector('[data-disable-voice-rights-notice]').checked)disableVoiceRightsNotice();
+        finish(true);dialog.close();
+      });
+    });
+  }
+  async function handleFile(file,kind,voiceRightsConfirmed=false){
     if(!file)return;
     const image=kind==='image'||kind==='background'||kind==='replace';
     if(!file.type.startsWith(image?'image/':'audio/'))return toast('Неподдерживаемый тип файла');
     if(file.size>(image?MAX_IMAGE_MB:MAX_AUDIO_MB)*1024*1024)return toast('Файл превышает допустимый размер');
+    if(kind==='voice'&&!voiceRightsConfirmed&&!(await confirmVoiceRights()))return;
+    if(kind!=='voice'&&!(await confirmUploadRights()))return;
     try{
       const dimensions=image?await imageDimensions(file):null;
       const {url,moderation}=await api.upload(file,token),before=snapshot();
@@ -170,11 +210,12 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       toast(moderation==='unchecked'?'Файл загружен без проверки контента':'Файл добавлен');
     }catch(err){toast(`Ошибка загрузки: ${err.message}`);}
   }
-  library.addEventListener('change',e=>{
+  library.addEventListener('change',async e=>{
     const id=e.target.id;
     if(['image-file','background-file','voice-file','music-file','replace-file'].includes(id)){
       const kind=({'image-file':'image','background-file':'background','voice-file':'voice','music-file':'music','replace-file':'replace'})[id];
-      const files=[...e.target.files];files.forEach(file=>handleFile(file,kind));
+      const files=[...e.target.files];for(const file of files)await handleFile(file,kind);
+      e.target.value='';
     }
   });
   properties.addEventListener('change',e=>{if(e.target.id==='replace-file')handleFile(e.target.files[0],'replace');});
@@ -226,6 +267,13 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
   });
   function setFormat(value){if(!formats[value]||value===p.format)return;if(!confirm('При изменении формата расположение элементов может потребовать корректировки. Продолжить?')){$('#format',root).value=p.format;return;}const before=snapshot();p.format=value;commit(before);render();}
   $('#format',root).addEventListener('change',e=>setFormat(e.target.value));
+  $('#edit-selected',root).addEventListener('click',()=>{
+    if(!selected)return;
+    libraryOpen=false;
+    propertiesOpen=true;
+    renderProps();
+    renderLibrary();
+  });
   $('#project-name',root).addEventListener('input',e=>{p.name=e.target.value;dirty();});
   root.querySelector('.editor-rail').addEventListener('click',e=>{
     const id=e.target.closest('[data-tool]')?.dataset.tool;if(!id)return;
@@ -246,9 +294,9 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       gesture={kind:'pan',sx,sy,panX,panY};stage.setPointerCapture(e.pointerId);e.preventDefault();return;
     }
     const id=item.dataset.id,entry=p.elements.find(v=>v.id===id);if(!entry)return;
-    // On touch screens a drag must not open the bottom properties panel.
-    // A panel is opened only on pointerup when no meaningful movement occurred.
-    if(mobile){selected=id;properties.classList.remove('is-open');renderCanvas();}
+    // On touch screens selecting or dragging keeps the canvas unobstructed.
+    // The bottom panel is opened with the dedicated edit button above the canvas.
+    if(mobile){selected=id;propertiesOpen=false;properties.classList.remove('is-open');renderCanvas();}
     else if(selected!==id)choose(id);
     gesture={kind:e.target.dataset.handle||'move',id,starting:{...entry},sx,sy,before:snapshot(),moved:false};
     stage.setPointerCapture(e.pointerId);e.preventDefault();
@@ -266,6 +314,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
     if(!gesture)return;
     if(mobile&&!gesture.moved&&Math.hypot(e.clientX-gesture.sx,e.clientY-gesture.sy)>7){
       gesture.moved=true;
+      propertiesOpen=false;
       properties.classList.remove('is-open');
     }
     if(gesture.kind==='pan'){
@@ -368,7 +417,8 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       renderAudio();
     }
   });
-  function voiceDialog(){
+  async function voiceDialog(){
+    if(!(await confirmVoiceRights()))return;
     let timer=null,stream=null,cancelled=false;
     const stopTimer=()=>{clearInterval(timer);timer=null;};
     const m=modal('Голосовое поздравление',`<div class="rec-box">
@@ -386,7 +436,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       stream?.getTracks().forEach(t=>t.stop());
     }});
     const startBtn=$('#rec-start',m),stopBtn=$('#rec-stop',m),status=$('#rec-status',m),time=$('#rec-time',m);
-    $('#modal-voice',m).onchange=async e=>{await handleFile(e.target.files[0],'voice');m.close();};
+    $('#modal-voice',m).onchange=async e=>{await handleFile(e.target.files[0],'voice',true);m.close();};
     const stop=()=>{if(recording?.state==='recording'){recording.stop();status.textContent='сохраняем…';}stopBtn.disabled=true;stopTimer();startBtn.classList.remove('live');};
     startBtn.onclick=async()=>{
       if(recording?.state==='recording')return stop();
@@ -400,7 +450,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
           stream?.getTracks().forEach(t=>t.stop());
           if(cancelled||!chunks.length)return;
           const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
-          await handleFile(new File([blob],`Поздравление.${blob.type.includes('mp4')?'mp4':'webm'}`,{type:blob.type}),'voice');
+          await handleFile(new File([blob],`Поздравление.${blob.type.includes('mp4')?'mp4':'webm'}`,{type:blob.type}),'voice',true);
           if(m.isConnected)m.close();
         };
         recorder.start();
