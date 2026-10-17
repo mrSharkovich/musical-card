@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import mimetypes
 import os
 import secrets
 import sys
@@ -11,17 +12,20 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, validate_upload
+from .moderation import moderate_image
 from .schemas import EditTokenResponse, OkResponse, ProjectRequest, PublicIdResponse, PublishRequest
 from .storage import FileStorage, QuotaExceeded, project_asset_ids, public_media_urls, private_media_urls
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = BASE_DIR.parent
+load_dotenv(BASE_DIR / ".env")
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
 storage = FileStorage(DATA_DIR)
 
@@ -264,12 +268,18 @@ async def upload_asset(file: UploadFile = File(...), edit_token: str = Form(...)
         kind = validate_upload(content)
     except ValueError as error:
         raise HTTPException(status_code=415, detail=str(error)) from error
+    moderation = None
+    if kind.is_image:
+        moderation = await moderate_image(content, kind.media_type)
+        if moderation.flagged:
+            raise HTTPException(status_code=422, detail="Файл не загружен: он содержит запрещённые материалы.")
     asset_id = token()
     try:
         storage.save_asset(asset_id, content, file.filename or "upload", kind.media_type, owner=edit_token)
     except OSError as error:
         raise HTTPException(status_code=507, detail="Недостаточно места для загрузки") from error
-    return {"url": f"/api/media/draft/{asset_id}"}
+    status = "not_applicable" if moderation is None else ("passed" if moderation.checked else "unchecked")
+    return {"url": f"/api/media/draft/{asset_id}", "moderation": status}
 
 
 @app.get("/api/media/draft/{asset_id}")
@@ -345,6 +355,11 @@ def get_card_asset(public_id: str, asset_id: str):
 # Роуты фронтенда подключаются после API: /api/* всегда обрабатывается сервером,
 # а браузер получает страницу и ES-модули с того же origin.
 app.mount("/src", StaticFiles(directory=FRONTEND_DIR / "src"), name="frontend-src")
+# Локальные шрифты (SIL OFL 1.1) — тот же origin, поэтому CSP не ослабляется.
+# Тип задаётся явно: реестр Windows может переопределять таблицу mimetypes.
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("text/plain", ".txt")
+app.mount("/fonts", StaticFiles(directory=FRONTEND_DIR / "fonts"), name="frontend-fonts")
 
 
 @app.get("/styles.css", include_in_schema=False)
@@ -367,6 +382,8 @@ async def security_headers(request: Request, call_next):
     response.headers["Content-Security-Policy"] = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'"
     if request.scope.get("path", "") in ("/", "/styles.css") or request.scope.get("path", "").startswith(("/src/", "/api/projects/", "/api/cards/", "/api/media/draft/")):
         response.headers["Cache-Control"] = "no-store"
+    elif request.scope.get("path", "").startswith("/fonts/") and response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=604800"
     return response
 
 

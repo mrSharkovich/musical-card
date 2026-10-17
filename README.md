@@ -2,18 +2,18 @@
 
 Веб-приложение без регистрации: редактор открытки, текст, рисунки, изображения, GIF, стикеры/фоны, голос и музыка с двумя регуляторами громкости, готовые шаблоны, публикация сразу или по времени. Сервер FastAPI + файловое хранилище JSON и медиа; браузерный UI на HTML/CSS/vanilla JavaScript.
 
-## Актуальный запуск на Windows 11 (VirtualBox)
+## Запуск на локальном хосте (Windows 11)
 
-См. **[`INSTALL_RU.md`](INSTALL_RU.md)** — резервное копирование, безопасная замена файлов, установка зависимостей, 44 автоматических теста, проверка в браузере и порядок отката.
+Оформление «Почта»: светлая и тёмная тема, сургучная печать у получателя, кассета со звуком, пенал инструментов на телефоне. Подробно — в **[`INSTALL_RU.md`](INSTALL_RU.md)**: резервная копия, замена файлов, тесты, ручная проверка, откат.
 
 ```powershell
-cd "C:\Users\vboxuser\Desktop\musical-card"
+cd ".\musical-card"
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
-$env:TRUSTED_HOSTS="localhost,127.0.0.1,192.168.1.102"
-.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8001 --workers 1 --no-access-log --no-proxy-headers
+powershell -ExecutionPolicy Bypass -File .\run-tests.ps1     # 45 + 16 тестов сервера и каталога, 135 проверок браузерной части
+powershell -ExecutionPolicy Bypass -File .\start-local.ps1   # http://localhost:8001
 ```
 
-Локально: `http://192.168.1.102:8001`. **Не публиковать этот HTTP-порт в WAN.** При внешнем доступе использовать HTTPS reverse proxy, Uvicorn bind `127.0.0.1`, ограничения прокси и Firewall.
+Сервер слушает только `127.0.0.1`. **Не публиковать HTTP-порт 8001 в сеть.** Внешний доступ — только через HTTPS reverse proxy (Caddy, следующий этап): Uvicorn на `127.0.0.1`, ограничения прокси и Firewall.
 
 ## Маршруты браузера
 
@@ -35,7 +35,8 @@ $env:TRUSTED_HOSTS="localhost,127.0.0.1,192.168.1.102"
 ## Документы
 
 - `LICENSE`: исходный MIT-код и сохранённое авторское уведомление.
-- `LICENSES.md`: реестр сторонних материалов, источники и условия CC BY/CC BY-SA.
+- `LICENSES.md`: реестр сторонних материалов, источники и условия CC BY/CC BY-SA, шрифты OFL и собственная графика.
+- `fonts/licenses/`: тексты SIL OFL 1.1 для встроенных шрифтов Caveat, Nunito, Pacifico.
 - `SECURITY_AUDIT_RU.md`: ограничения и проведённые тесты.
 - `INSTALL_RU.md`: установка, обратная совместимость, тесты и откат.
 - `DEPLOYMENT_CHECKLIST_RU.md`: что ещё нужно сделать перед HTTPS и публичным запуском.

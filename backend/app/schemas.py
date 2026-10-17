@@ -6,13 +6,15 @@ from typing import Any, Literal
 import math
 import re
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 HEX = re.compile(r"#[0-9a-fA-F]{6}\Z")
 ID = re.compile(r"[A-Za-z0-9_-]{1,100}\Z")
 DRAFT = re.compile(r"/api/media/draft/[A-Za-z0-9_-]{16,128}(?:\?edit_token=[A-Za-z0-9_-]{16,128})?\Z")
 CATALOG_IMAGE = re.compile(r"/api/catalog/(?:backgrounds|stickers)/[A-Za-z0-9_-]+/file\Z")
 CATALOG_AUDIO = re.compile(r"/api/catalog/music/[A-Za-z0-9_-]+/file\Z")
+# Шрифты текста: системные (serif, sans, mono) и локальные OFL-шрифты из /fonts (hand, script, round).
+TEXT_FONTS = ("serif", "sans", "mono", "hand", "script", "round")
 ELEMENT_BASE = {"id", "type", "x", "y", "w", "h", "rotate", "opacity"}
 ELEMENT_EXTRA = {
     "text": {"text", "font", "align", "size", "color"},
@@ -37,6 +39,8 @@ class ProjectPayload(BaseModel):
     music: dict[str, Any] | None = None
     voiceVolume: float = Field(default=1, ge=0, le=1, allow_inf_nan=False)
     musicVolume: float = Field(default=0.35, ge=0, le=1, allow_inf_nan=False)
+    # «Музыка тише под голосом». Строго bool: строки и числа отклоняются.
+    duckMusic: StrictBool = False
     updatedAt: datetime | None = None
 
     @field_validator("elements")
@@ -65,7 +69,7 @@ class ProjectPayload(BaseModel):
             if kind == "text":
                 if not isinstance(item.get("text", ""), str) or len(item.get("text", "")) > 5000:
                     raise ValueError("Слишком длинный текст")
-                if item.get("font", "serif") not in ("serif", "sans", "mono") or item.get("align", "center") not in ("left", "right", "center"):
+                if item.get("font", "serif") not in TEXT_FONTS or item.get("align", "center") not in ("left", "right", "center"):
                     raise ValueError("Недопустимый шрифт или выравнивание")
             if kind == "shape" and item.get("kind", "heart") not in ("star", "circle", "square", "heart"):
                 raise ValueError("Недопустимая фигура")

@@ -2,7 +2,9 @@
   "name": "musical-card-frontend",
   "private": true,
   "type": "module",
-  "scripts": {"test": "node tests/smoke.mjs"},
+  "scripts": {
+    "test": "node tests/project-contract-fix.mjs && node tests/template-contract.mjs && node tests/design-contract.mjs"
+  },
   "dependencies": {},
   "devDependencies": {}
 }
