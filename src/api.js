@@ -11,7 +11,7 @@ const clone = obj => structuredClone(obj);
 // remaining values, media ownership and edit permissions. Never relax the API schema.
 const PROJECT_FIELDS = new Set([
   'name', 'format', 'bg', 'elements', 'voice', 'music',
-  'voiceVolume', 'musicVolume', 'updatedAt'
+  'voiceVolume', 'musicVolume', 'duckMusic', 'updatedAt'
 ]);
 const COMMON_FIELDS = ['id', 'type', 'x', 'y', 'w', 'h', 'rotate', 'opacity'];
 const ELEMENT_FIELDS = Object.fromEntries(Object.entries({
@@ -49,12 +49,25 @@ export function projectForApi(project) {
 let activeEditToken = null;
 
 
+/** Понятное сообщение вместо сырого JSON сервера ({"detail": ...}). */
+export function apiErrorMessage(text, status) {
+  let detail = null;
+  try { detail = JSON.parse(text)?.detail; } catch { /* не JSON */ }
+  if (typeof detail === 'string' && detail.trim()) return detail.slice(0, 200);
+  if (Array.isArray(detail) || status === 422) return 'Данные не прошли проверку на сервере';
+  if (status === 404) return 'Не найдено: ссылка неверна или открытка удалена';
+  if (status === 429) return 'Слишком много запросов. Подождите минуту и попробуйте снова';
+  if (status === 413) return 'Файл или данные слишком большие';
+  const plain = String(text || '').replace(/<[^>]*>/g, '').trim();
+  return plain ? plain.slice(0, 200) : `Ошибка сервера ${status}`;
+}
+
 async function request(path,method='GET',body) {
   const options = {method,headers:{}};
   if(body instanceof FormData) options.body=body;
   else if(body!==undefined) {options.headers['Content-Type']='application/json';options.body=JSON.stringify(body);}
   const res=await fetch(`${API_BASE}${path}`,options);
-  if(!res.ok) throw new Error((await res.text()).slice(0,200) || `Ошибка API ${res.status}`);
+  if(!res.ok) throw new Error(apiErrorMessage(await res.text(), res.status));
   return res.json();
 }
 function mediaDB(){

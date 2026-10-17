@@ -1,5 +1,13 @@
 import {melodies} from './model.js';
 import {mediaSource} from './stage.js';
+
+// «Музыка тише под голосом»: пока звучит голосовое поздравление, музыка играет на этой доле громкости.
+export const DUCK_FACTOR = 0.45;
+export function effectiveMusicVolume(music, {duck = false, voicePresent = false} = {}) {
+  const base = Number.isFinite(Number(music)) ? Math.min(1, Math.max(0, Number(music))) : 0.35;
+  return duck && voicePresent ? base * DUCK_FACTOR : base;
+}
+
 export class CardAudio {
   constructor(){this.ctx=null;this.voice=new Audio();this.music=new Audio();this.music.loop=true;this.playing=false;this.nodes=[];this.timer=null;this.limit=null;}
   async prepare(p){
@@ -9,12 +17,20 @@ export class CardAudio {
     if(p.music?.src)this.music.src=await mediaSource(p.music.src);
     this.volume(p.voiceVolume??1,p.musicVolume??.35);
   }
-  volume(voice,music){this.voice.volume=voice;this.music.volume=music;if(this.gain)this.gain.gain.value=music*.25;}
+  volume(voice,music){
+    this.baseVoice=voice;this.baseMusic=music;
+    const level=effectiveMusicVolume(music,{duck:!!this.project?.duckMusic,voicePresent:!!this.voice.src});
+    this.voice.volume=voice;this.music.volume=level;if(this.gain)this.gain.gain.value=level*.25;
+  }
+  /** Пересчитать громкость после смены настройки приглушения. */
+  refreshVolume(){this.volume(this.baseVoice??this.project?.voiceVolume??1,this.baseMusic??this.project?.musicVolume??.35);}
   synth(){
     const track=melodies.find(m=>m.id===this.project.music?.key);
     if(!track||track.kind==='file'||!Array.isArray(track.notes))return;
     this.ctx??=new AudioContext();
-    this.gain=this.ctx.createGain();this.gain.gain.value=(this.project.musicVolume??.35)*.25;this.gain.connect(this.ctx.destination);
+    this.gain=this.ctx.createGain();
+    this.gain.gain.value=effectiveMusicVolume(this.project.musicVolume??.35,{duck:!!this.project.duckMusic,voicePresent:!!this.voice.src})*.25;
+    this.gain.connect(this.ctx.destination);
     const playNotes=()=>{
       const start=this.ctx.currentTime+.02;
       track.notes.forEach((freq,i)=>{

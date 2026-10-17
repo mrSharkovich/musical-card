@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import mimetypes
 import os
 import secrets
 import sys
@@ -345,6 +346,11 @@ def get_card_asset(public_id: str, asset_id: str):
 # Роуты фронтенда подключаются после API: /api/* всегда обрабатывается сервером,
 # а браузер получает страницу и ES-модули с того же origin.
 app.mount("/src", StaticFiles(directory=FRONTEND_DIR / "src"), name="frontend-src")
+# Локальные шрифты (SIL OFL 1.1) — тот же origin, поэтому CSP не ослабляется.
+# Тип задаётся явно: реестр Windows может переопределять таблицу mimetypes.
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("text/plain", ".txt")
+app.mount("/fonts", StaticFiles(directory=FRONTEND_DIR / "fonts"), name="frontend-fonts")
 
 
 @app.get("/styles.css", include_in_schema=False)
@@ -367,6 +373,8 @@ async def security_headers(request: Request, call_next):
     response.headers["Content-Security-Policy"] = "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'"
     if request.scope.get("path", "") in ("/", "/styles.css") or request.scope.get("path", "").startswith(("/src/", "/api/projects/", "/api/cards/", "/api/media/draft/")):
         response.headers["Cache-Control"] = "no-store"
+    elif request.scope.get("path", "").startswith("/fonts/") and response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=604800"
     return response
 
 

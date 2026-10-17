@@ -21,7 +21,7 @@ export const clamp = (v,min,max) => Math.min(max,Math.max(min,v));
 const text = (label,x,y,w,size,color='#603d73') => ({id:uid(),type:'text',text:label,x,y,w,h:size*2.0,size,color,rotate:0,font:'serif'});
 const shape = (x,y,w,h,color,kind='heart') => ({id:uid(),type:'shape',x,y,w,h,color,kind,rotate:0});
 export function newProject(name='Моя открытка',format='4:5',template='bloom') {
-  const p = {name,format,bg:'#fce8f2',elements:[],voice:null,music:null,voiceVolume:1,musicVolume:.35,updatedAt:new Date().toISOString()};
+  const p = {name,format,bg:'#fce8f2',elements:[],voice:null,music:null,voiceVolume:1,musicVolume:.35,duckMusic:false,updatedAt:new Date().toISOString()};
   return applyTemplate(p,template);
 }
 export function applyTemplate(p,theme) {
