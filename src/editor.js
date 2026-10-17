@@ -2,10 +2,11 @@ import {api,linkFor} from './api.js';
 import {applyTemplate,applyCatalogTemplate,templates,melodies,backgrounds,stickers,formats,uid,esc,clamp} from './model.js';
 import {renderStage,scaleStage} from './stage.js';
 import {CardAudio} from './audio.js';
-import {$,$$,toast,modal,copy} from './ui.js';
+import {$,$$,toast,modal} from './ui.js';
 import {MAX_IMAGE_MB,MAX_AUDIO_MB} from './config.js';
 import {icon,reel} from './icons.js';
 import {themeButton,syncThemeButtons,setTheme,currentTheme} from './themeToggle.js';
+import {renderAuthorKeyPanel,attachAuthorKeyPanel} from './shareLinks.js';
 
 // Шрифты текста: подписи для меню (значения проверяет сервер, см. TEXT_FONTS в schemas.py).
 const FONT_OPTIONS=[['hand','От руки (Caveat)'],['round','Округлый (Nunito)'],['script','Каллиграфия (Pacifico)'],['serif','С засечками'],['sans','Без засечек'],['mono','Моноширинный']];
@@ -27,7 +28,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       <button type="button" class="btn light" data-top="undo" title="Отменить" aria-label="Отменить">${icon('undo',18)}</button>
       <button type="button" class="btn light" data-top="redo" title="Повторить" aria-label="Повторить">${icon('redo',18)}</button>
       <span class="desktop-only">${themeButton()}</span>
-      <button type="button" class="btn light desktop-only" data-top="link" aria-label="Ссылка редактирования">${icon('link',17)}<span class="label wide-only">Ссылка редактирования</span></button>
+      <button type="button" class="btn light desktop-only" data-top="link" aria-label="Секретный ключ автора">${icon('key',17)}<span class="label wide-only">Ключ автора</span></button>
       <button type="button" class="btn danger desktop-only" data-top="delete" title="Удалить открытку и связанные материалы" aria-label="Удалить открытку">${icon('trash',17)}<span class="label wide-only">Удалить</span></button>
       <button type="button" class="btn light" data-top="preview" aria-label="Просмотр">${icon('eye',18)}<span class="label">Просмотр</span></button>
       <button type="button" class="btn primary" data-top="publish" aria-label="Отправить">${icon('send',18)}<span class="label">Отправить</span></button>
@@ -320,7 +321,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
   function moreMenu(){
     const dark=currentTheme()==='dark';
     const m=modal('Действия',`<div class="menu-list">
-      <button type="button" class="btn light" data-more="link">${icon('link',18)}Ссылка редактирования</button>
+      <button type="button" class="btn light" data-more="link">${icon('key',18)}Секретный ключ автора</button>
       <button type="button" class="btn light" data-more="theme">${icon(dark?'sun':'moon',18)}${dark?'Светлая тема':'Тёмная тема'}</button>
       <button type="button" class="btn danger" data-more="delete">${icon('trash',18)}Удалить открытку</button></div>`);
     m.addEventListener('click',e=>{
@@ -341,8 +342,8 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       return;
     }
     if(action==='link'){
-      const m=modal('Ссылка для редактирования',`<p>Сохраните эту секретную ссылку. Любой, у кого она есть, сможет менять открытку.</p><input readonly value="${esc(linkFor('edit',token))}" /><button class="btn primary wide" id="copy-edit">Скопировать</button>`);
-      $('#copy-edit',m).onclick=async()=>{await copy(linkFor('edit',token));onEditLinkCopied();};
+      const m=modal('Секретный ключ автора',renderAuthorKeyPanel({expanded:true}));
+      attachAuthorKeyPanel(m.querySelector('[data-author-key]'),linkFor('edit',token),{onSaved:onEditLinkCopied});
     }
     if(['preview','publish'].includes(action)){
       try{await flush();location.hash=`#/${action}/${token}`;}catch(err){toast(`Не удалось сохранить: ${err.message}`);}

@@ -1,3 +1,4 @@
+
 import {api,linkFor} from './api.js';
 import {newProject,applyCatalogTemplate,templates,formats,esc,setCatalog} from './model.js';
 import {renderStage,scaleStage} from './stage.js';
@@ -7,6 +8,7 @@ import {$,toast,copy,modal,shareLink,safeColor,inkFor} from './ui.js';
 import {API_BASE} from './config.js';
 import {icon,brandMark,reel,flower} from './icons.js';
 import {themeButton,syncThemeButtons} from './themeToggle.js';
+import {renderPublishedLinks,renderAuthorKeyPanel,attachAuthorKeyPanel} from './shareLinks.js';
 
 const root=$('#app');
 let cleanup=()=>{};
@@ -221,12 +223,16 @@ async function publishPage(token){
     e.preventDefault();const later=$('input[name=access]:checked').value==='later';let opensAt=null;
     if(later){const date=$('#open-date').value;if(!date||new Date(date).getTime()<=Date.now())return toast('Выберите дату и время в будущем');opensAt=new Date(date).toISOString();}
     try{const {publicId}=await api.publish(token,opensAt),link=linkFor('card',publicId);
+      const editLink=linkFor('edit',token);
       $('#publish-result').innerHTML=`<div class="publish-result"><h2>Готово, запечатано!</h2><p class="muted">${later?'Открытка станет доступной после указанного времени.':'Открытка доступна сразу.'}</p>
-        <div class="link-box"><input value="${esc(link)}" readonly aria-label="Публичная ссылка" /><button type="button" class="btn primary" id="copy-public">${icon('copy',16)}Скопировать</button></div>
-        <div class="link-actions"><button type="button" class="btn light" id="share-public">${icon('share',16)}Поделиться</button><a class="btn light" href="#/card/${encodeURIComponent(publicId)}">${icon('eye',16)}Проверить ссылку</a></div>
-        <p class="hand muted" style="font-size:20px;margin:4px 0 0">вставьте ссылку в любой мессенджер — получатель нажмёт на печать и услышит вас</p></div>`;
+        ${renderPublishedLinks(link,publicId)}
+        ${renderAuthorKeyPanel()}
+      </div>`;
       $('#copy-public').onclick=()=>copy(link);
       $('#share-public').onclick=()=>shareLink({url:link});
+      attachAuthorKeyPanel($('#publish-result [data-author-key]'),editLink,{onSaved:()=>{
+        if(editorSession?.token===token)editorSession.linkCopied=true;
+      }});
     }catch(err){toast(err.message);}
   };
 }
@@ -309,18 +315,15 @@ function confirmEditorExit(destination){
   const session=editorSession;
   if(!session)return;
   const editLink=linkFor('edit',session.token);
-  const dialog=modal('Сохраните ссылку на черновик',`<p>Если уйти без ссылки для редактирования, вы потеряете доступ к черновику — он будет удалён.</p>
-    <input readonly value="${esc(editLink)}" aria-label="Ссылка для редактирования" />
-    <button type="button" class="btn primary wide" data-copy-edit-link>Скопировать ссылку</button>
+  const dialog=modal('Сохраните секретный ключ автора',`<p>Без секретного ключа вы потеряете доступ к черновику. Если уйти без сохранения, черновик будет удалён.</p>
+    ${renderAuthorKeyPanel({expanded:true})}
     <div class="row-wrap"><button type="button" class="btn light" data-stay-editor>Остаться</button><button type="button" class="btn danger" data-leave-editor>Уйти и удалить</button></div>`);
+  attachAuthorKeyPanel(dialog.querySelector('[data-author-key]'),editLink,{onSaved:()=>{
+    if(editorSession?.token===session.token)editorSession.linkCopied=true;
+    dialog.close();
+  }});
   dialog.addEventListener('click',async event=>{
     if(event.target.closest('[data-stay-editor]')){dialog.close();return;}
-    if(event.target.closest('[data-copy-edit-link]')){
-      await copy(editLink);
-      if(editorSession?.token===session.token)editorSession.linkCopied=true;
-      dialog.close();
-      return;
-    }
     if(!event.target.closest('[data-leave-editor]'))return;
     try{
       await api.deleteProject(session.token);

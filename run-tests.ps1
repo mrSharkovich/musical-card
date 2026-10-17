@@ -22,7 +22,7 @@ if ($LASTEXITCODE -ne 0) { $failed = $true }
 
 Write-Host "`n== Браузерная часть (tests/*.mjs, нужен Node.js) ==" -ForegroundColor Cyan
 if (Get-Command node -ErrorAction SilentlyContinue) {
-    foreach ($test in 'project-contract-fix.mjs', 'template-contract.mjs', 'design-contract.mjs') {
+    foreach ($test in 'project-contract-fix.mjs', 'template-contract.mjs', 'design-contract.mjs', 'share-links.mjs') {
         node "tests\$test"
         if ($LASTEXITCODE -ne 0) { $failed = $true }
     }

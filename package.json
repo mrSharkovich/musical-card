@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/project-contract-fix.mjs && node tests/template-contract.mjs && node tests/design-contract.mjs"
+    "test": "node tests/project-contract-fix.mjs && node tests/template-contract.mjs && node tests/design-contract.mjs && node tests/share-links.mjs"
   },
   "dependencies": {},
   "devDependencies": {}

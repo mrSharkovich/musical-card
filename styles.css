@@ -399,6 +399,47 @@ input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:20px;hei
 .link-box input{flex:1;min-width:0;border:0;background:transparent;padding:8px 0;font-weight:800}
 .link-actions{display:flex;flex-wrap:wrap;gap:8px}
 
+/* ---------- Ссылки после публикации: получатель отдельно, ключ автора отдельно ---------- */
+.recipient-link-panel{padding:18px;border:2px solid var(--green);border-radius:16px;background:var(--paper)}
+.link-panel-title{display:flex;align-items:flex-start;gap:11px}
+.link-panel-title>.ico{color:var(--green);margin-top:3px}
+.link-panel-title h3{margin:0 0 3px;font-size:18px}
+.link-panel-title p{margin:0 0 13px;color:var(--muted);font-size:13px;font-weight:600}
+.recipient-link-panel .link-box{margin-bottom:10px}
+.recipient-link-hint{display:flex;align-items:flex-start;gap:6px;margin:12px 0 0;font-size:13px;font-weight:700;color:var(--green)}
+.recipient-link-hint .ico{margin-top:2px}
+.author-key-reminder{display:flex;align-items:flex-start;gap:10px;border-radius:12px;padding:12px 14px;border:1.5px solid var(--gold);background:var(--paper2);font-size:13px;line-height:1.5}
+.author-key-reminder .ico{color:var(--gold);margin-top:1px}
+.author-key-reminder span{display:block;color:var(--muted);font-weight:650}
+.author-key-reminder b{color:var(--text);font-weight:900}
+.author-key-reminder.saved{border-color:var(--green)}
+.author-key-reminder.saved .ico{color:var(--green)}
+.author-key-panel{border:1.5px solid var(--gold);border-radius:14px;background:var(--paper);overflow:hidden}
+.author-key-panel summary{cursor:pointer;padding:15px 16px;display:flex;align-items:center;gap:10px;list-style:none}
+.author-key-panel summary::-webkit-details-marker{display:none}
+.author-key-panel summary::after{content:'▾';margin-left:auto;color:var(--muted);font-size:20px}
+.author-key-panel[open] summary::after{content:'▴'}
+.author-key-panel summary>.ico{color:var(--gold)}
+.author-key-panel summary strong,.author-key-panel summary small{display:block}
+.author-key-panel summary strong{font-weight:900}
+.author-key-panel summary small{color:var(--muted);font-size:12px;font-weight:700}
+.author-key-body{border-top:1px solid var(--line);padding:14px 16px 16px}
+.author-key-body p{font-size:13px;color:var(--muted);font-weight:650;margin:0 0 12px}
+.author-key-label{display:block;font-size:13px;font-weight:800}
+.author-key-row{display:flex;gap:8px;margin:5px 0 12px;align-items:center}
+.author-key-row input{flex:1;min-width:0;font:700 13px var(--sans)}
+.author-key-row .btn{flex:none}
+.author-key-panel .author-key-note{display:flex;gap:8px;margin-top:8px}
+.author-key-note .ico{color:var(--gold);margin-top:2px}
+.author-key-panel .key-saved-message{color:var(--green);font-weight:800;margin-bottom:0}
+@media(max-width:500px){
+  .recipient-link-panel{padding:12px}
+  .recipient-link-panel .link-actions .btn{width:100%}
+  .author-key-row{flex-wrap:wrap}
+  .author-key-row input{flex-basis:100%}
+  .author-key-row .btn{width:100%}
+}
+
 /* ---------- Ожидание и ошибка ---------- */
 .wait-page{min-height:calc(100dvh - 160px);display:grid;place-items:center;padding:24px 16px 48px}
 .wait-content{display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;max-width:520px}
