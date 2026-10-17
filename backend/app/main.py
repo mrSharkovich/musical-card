@@ -12,17 +12,20 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, validate_upload
+from .moderation import moderate_image
 from .schemas import EditTokenResponse, OkResponse, ProjectRequest, PublicIdResponse, PublishRequest
 from .storage import FileStorage, QuotaExceeded, project_asset_ids, public_media_urls, private_media_urls
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = BASE_DIR.parent
+load_dotenv(BASE_DIR / ".env")
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR / "data"))
 storage = FileStorage(DATA_DIR)
 
@@ -265,12 +268,18 @@ async def upload_asset(file: UploadFile = File(...), edit_token: str = Form(...)
         kind = validate_upload(content)
     except ValueError as error:
         raise HTTPException(status_code=415, detail=str(error)) from error
+    moderation = None
+    if kind.is_image:
+        moderation = await moderate_image(content, kind.media_type)
+        if moderation.flagged:
+            raise HTTPException(status_code=422, detail="Файл не загружен: он содержит запрещённые материалы.")
     asset_id = token()
     try:
         storage.save_asset(asset_id, content, file.filename or "upload", kind.media_type, owner=edit_token)
     except OSError as error:
         raise HTTPException(status_code=507, detail="Недостаточно места для загрузки") from error
-    return {"url": f"/api/media/draft/{asset_id}"}
+    status = "not_applicable" if moderation is None else ("passed" if moderation.checked else "unchecked")
+    return {"url": f"/api/media/draft/{asset_id}", "moderation": status}
 
 
 @app.get("/api/media/draft/{asset_id}")

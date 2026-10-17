@@ -156,7 +156,7 @@ export function mountEditor(root,token,p){
     if(file.size>(image?MAX_IMAGE_MB:MAX_AUDIO_MB)*1024*1024)return toast('Файл превышает допустимый размер');
     try{
       const dimensions=image?await imageDimensions(file):null;
-      const {url}=await api.upload(file,token),before=snapshot();
+      const {url,moderation}=await api.upload(file,token),before=snapshot();
       if(kind==='image'){
         const {w,h}=fitDimensions(dimensions.width,dimensions.height,420,310);
         add({...base('image',180,180,w,h),src:url});
@@ -167,7 +167,7 @@ export function mountEditor(root,token,p){
       }else if(kind==='background'){
         replaceBackground(url);commit(before);render();
       }else {p[kind]={src:url,name:file.name};commit(before);renderAudio();}
-      toast('Файл добавлен');
+      toast(moderation==='unchecked'?'Файл загружен без проверки контента':'Файл добавлен');
     }catch(err){toast(`Ошибка загрузки: ${err.message}`);}
   }
   library.addEventListener('change',e=>{
