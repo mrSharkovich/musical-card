@@ -11,7 +11,7 @@ import struct
 import warnings
 from PIL import Image, UnidentifiedImageError
 
-MAX_IMAGE_BYTES = 8 * 1024 * 1024
+MAX_IMAGE_BYTES = 50 * 1024 * 1024
 MAX_AUDIO_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_PIXELS = 20_000_000
 MAX_ANIMATION_FRAMES = 300
@@ -100,3 +100,34 @@ def validate_upload(content: bytes) -> FileKind:
     else:
         _validate_audio(content, kind.media_type)
     return kind
+
+
+def compress_image_losslessly(content: bytes, kind: FileKind) -> bytes:
+    """Return a smaller visually identical image when Pillow supports it safely.
+
+    PNG and WebP can be re-encoded losslessly. JPEG is deliberately left intact:
+    Pillow has no lossless JPEG transcoder, and re-saving it could add artefacts.
+    GIF is also preserved byte-for-byte to retain its animation and timing.
+    """
+    if not kind.is_image or kind.media_type in {"image/jpeg", "image/gif"}:
+        return content
+
+    try:
+        with Image.open(BytesIO(content)) as image:
+            image.load()
+            optimized = BytesIO()
+            icc_profile = image.info.get("icc_profile")
+            if kind.media_type == "image/png":
+                options = {"format": "PNG", "optimize": True, "compress_level": 9}
+            elif kind.media_type == "image/webp":
+                options = {"format": "WEBP", "lossless": True, "method": 6}
+            else:
+                return content
+            if icc_profile:
+                options["icc_profile"] = icc_profile
+            image.save(optimized, **options)
+    except (OSError, ValueError):
+        return content
+
+    candidate = optimized.getvalue()
+    return candidate if len(candidate) < len(content) else content

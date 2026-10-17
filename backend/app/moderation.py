@@ -7,12 +7,13 @@ import os
 from dataclasses import dataclass
 
 import httpx
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 OPENAI_MODERATIONS_URL = "https://api.openai.com/v1/moderations"
 OPENAI_MODERATION_MODEL = "omni-moderation-latest"
 MODERATION_TIMEOUT_SECONDS = 10
+MODERATION_MAX_SIDE = 2048
 logger = logging.getLogger(__name__)
 
 
@@ -23,19 +24,17 @@ class ModerationOutcome:
 
 
 def moderation_image(content: bytes, media_type: str) -> tuple[bytes, str]:
-    """Return moderation-safe input; use the first GIF frame as a PNG."""
-    if media_type != "image/gif":
-        return content, media_type
-
+    """Build a small scan-only copy; stored uploads are never resized here."""
     try:
         with Image.open(io.BytesIO(content)) as image:
             image.seek(0)
-            first_frame = image.convert("RGBA")
+            scan_image = ImageOps.exif_transpose(image).convert("RGB")
+            scan_image.thumbnail((MODERATION_MAX_SIDE, MODERATION_MAX_SIDE))
             output = io.BytesIO()
-            first_frame.save(output, format="PNG")
-            return output.getvalue(), "image/png"
+            scan_image.save(output, format="JPEG", quality=85, optimize=True)
+            return output.getvalue(), "image/jpeg"
     except (UnidentifiedImageError, OSError, SyntaxError, ValueError) as error:
-        raise ValueError("Не удалось прочитать GIF") from error
+        raise ValueError("Не удалось подготовить изображение для модерации") from error
 
 
 async def moderate_image(content: bytes, media_type: str) -> ModerationOutcome:
