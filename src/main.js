@@ -3,7 +3,7 @@ import {newProject,applyCatalogTemplate,templates,formats,esc,setCatalog} from '
 import {renderStage,scaleStage} from './stage.js';
 import {CardAudio} from './audio.js';
 import {mountEditor} from './editor.js';
-import {$,toast,copy,safeColor,inkFor} from './ui.js';
+import {$,toast,copy,shareLink,safeColor,inkFor} from './ui.js';
 import {API_BASE} from './config.js';
 import {icon,brandMark,reel,flower} from './icons.js';
 import {themeButton,syncThemeButtons} from './themeToggle.js';
@@ -17,7 +17,7 @@ const catalogReady=api.getCatalog().then(setCatalog).catch(error=>{
 
 function header(){
   return `<header class="site-head"><a class="brand" href="#/">${brandMark(30)}<span>Музыкальная открытка</span></a>
-  <nav aria-label="Основное меню"><a class="nav-link" href="#/templates">Шаблоны</a>${themeButton()}<button type="button" data-create class="btn primary">${icon('send',17)}<span>Написать открытку</span></button></nav></header>`;
+  <nav aria-label="Основное меню"><a class="nav-link" href="#/templates">Шаблоны</a>${themeButton()}<button type="button" data-create class="btn primary">${icon('send',17)}<span>Создать открытку</span></button></nav></header>`;
 }
 function footer(){
   return `<footer class="site-footer"><b>Музыкальная открытка</b><span>Без регистрации</span><a href="/LICENSES.md" target="_blank" rel="noopener noreferrer">Авторы и лицензии встроенных материалов</a></footer>`;
@@ -55,7 +55,7 @@ function landing(){
       <span class="greeting" aria-hidden="true">дорогая Аня, …</span>
       <h1>Открытка, которую можно <span class="scribble">услышать<svg viewBox="0 0 300 18" preserveAspectRatio="none" aria-hidden="true"><path d="M4 12 C 60 2, 120 18, 180 8 S 270 6, 296 10" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span></h1>
       <p>Подпишите от руки, наговорите пару тёплых слов, добавьте музыку — и отправьте ссылкой. Как настоящая почта, только приходит сразу.</p>
-      <div class="hero-buttons"><button type="button" class="btn primary big" data-create>${icon('send',18)}Написать открытку</button><a class="btn light big" href="#/templates">Посмотреть шаблоны</a></div>
+      <div class="hero-buttons"><button type="button" class="btn primary big" data-create>${icon('send',18)}Создать открытку</button><a class="btn light big" href="#/templates">Посмотреть шаблоны</a></div>
       <span class="hero-note">без регистрации · с телефона и компьютера</span>
     </div>
     <div class="hero-desk" aria-label="Пример открытки">
@@ -81,7 +81,7 @@ function landing(){
     <div class="stamps">
       <article>${stampHTML('#C9372C','1',-4)}<h3>Выберите открытку</h3><p>Готовый шаблон или чистый лист. Меняйте всё: текст, фото, GIF, наклейки и рисунок.</p></article>
       <article>${stampHTML('#3E7B57','2',3)}<h3>Скажите пару слов</h3><p>Запишите голос прямо на сайте или загрузите запись с телефона.</p></article>
-      <article>${stampHTML('#2F6B8F','3',-2)}<h3>Поставьте музыку</h3><p>Из подборки со свободными лицензиями или свою. Громкость голоса и музыки — по отдельности.</p></article>
+      <article>${stampHTML('#2F6B8F','3',-2)}<h3>Поставьте музыку</h3><p>Из подборки со свободными лицензиями или свою. Настройте громкость голоса и музыки.</p></article>
       <article>${stampHTML('#E0A33A','4',5,'#1F2A44')}<h3>Запечатайте и отправьте</h3><p>Ссылка готова сразу. Можно назначить день и час, когда конверт откроется.</p></article>
     </div>
   </div></section>
@@ -100,7 +100,7 @@ function landing(){
     </section>
     <section class="envelope-cta"><span class="airmail" aria-hidden="true"></span><div class="inner">
       <div><span class="to">кому: тому, кто давно ждёт</span><h2>Напишите сегодня — пусть услышат ваш голос</h2></div>
-      <button type="button" class="btn primary big" data-create>Написать открытку</button>
+      <button type="button" class="btn primary big" data-create>Создать открытку</button>
     </div></section>
   </main>${footer()}`;
   const seal=$('#demo-seal');
@@ -220,13 +220,12 @@ async function publishPage(token){
     e.preventDefault();const later=$('input[name=access]:checked').value==='later';let opensAt=null;
     if(later){const date=$('#open-date').value;if(!date||new Date(date).getTime()<=Date.now())return toast('Выберите дату и время в будущем');opensAt=new Date(date).toISOString();}
     try{const {publicId}=await api.publish(token,opensAt),link=linkFor('card',publicId);
-      const canShare=typeof navigator.share==='function';
       $('#publish-result').innerHTML=`<div class="publish-result"><h2>Готово, запечатано!</h2><p class="muted">${later?'Открытка станет доступной после указанного времени.':'Открытка доступна сразу.'}</p>
         <div class="link-box"><input value="${esc(link)}" readonly aria-label="Публичная ссылка" /><button type="button" class="btn primary" id="copy-public">${icon('copy',16)}Скопировать</button></div>
-        <div class="link-actions">${canShare?`<button type="button" class="btn light" id="share-public">${icon('share',16)}Поделиться</button>`:''}<a class="btn light" href="#/card/${encodeURIComponent(publicId)}">${icon('eye',16)}Проверить ссылку</a></div>
+        <div class="link-actions"><button type="button" class="btn light" id="share-public">${icon('share',16)}Поделиться</button><a class="btn light" href="#/card/${encodeURIComponent(publicId)}">${icon('eye',16)}Проверить ссылку</a></div>
         <p class="hand muted" style="font-size:20px;margin:4px 0 0">вставьте ссылку в любой мессенджер — получатель нажмёт на печать и услышит вас</p></div>`;
       $('#copy-public').onclick=()=>copy(link);
-      if(canShare)$('#share-public').onclick=()=>navigator.share({title:'Музыкальная открытка',url:link}).catch(()=>{});
+      $('#share-public').onclick=()=>shareLink({url:link});
     }catch(err){toast(err.message);}
   };
 }
