@@ -3,7 +3,7 @@ import {newProject,applyCatalogTemplate,templates,formats,esc,setCatalog} from '
 import {renderStage,scaleStage} from './stage.js';
 import {CardAudio} from './audio.js';
 import {mountEditor} from './editor.js';
-import {$,toast,copy,shareLink,safeColor,inkFor} from './ui.js';
+import {$,toast,copy,modal,shareLink,safeColor,inkFor} from './ui.js';
 import {API_BASE} from './config.js';
 import {icon,brandMark,reel,flower} from './icons.js';
 import {themeButton,syncThemeButtons} from './themeToggle.js';
@@ -11,6 +11,7 @@ import {themeButton,syncThemeButtons} from './themeToggle.js';
 const root=$('#app');
 let cleanup=()=>{};
 let galleryFilter='';
+let editorSession=null;
 const catalogReady=api.getCatalog().then(setCatalog).catch(error=>{
   console.warn('Не удалось загрузить каталог:',error);
 });
@@ -272,10 +273,19 @@ async function route(){
   const dialog=document.querySelector('#dialog-overlay');
   if(dialog){if(typeof dialog.close==='function')dialog.close();else dialog.remove();}
   const [page,id]=location.hash.replace(/^#\/?/,'').split('/');
+  const staysInEditorFlow=editorSession&&id===editorSession.token&&['edit','preview','publish'].includes(page);
+  if(editorSession&&!staysInEditorFlow)editorSession=null;
   try{
     await catalogReady;
     if(page==='templates')gallery();
-    else if(page==='edit'&&id){const {project}=await api.getProject(id);cleanup=mountEditor(root,id,project);}
+    else if(page==='edit'&&id){
+      if(!editorSession||editorSession.token!==id)editorSession={token:id,linkCopied:false};
+      const {project}=await api.getProject(id);
+      cleanup=mountEditor(root,id,project,{
+        onEditLinkCopied:()=>{if(editorSession?.token===id)editorSession.linkCopied=true;},
+        onProjectDeleted:()=>{if(editorSession?.token===id)editorSession=null;},
+      });
+    }
     else if(page==='preview'&&id){const {project}=await api.getProject(id);showViewer(project,{preview:true,token:id});}
     else if(page==='publish'&&id)await publishPage(id);
     else if(page==='card'&&id)await publicPage(id);
@@ -291,5 +301,48 @@ document.addEventListener('click',e=>{
   else if(b.dataset.newTemplate)create(b.dataset.newTemplate);
   else if(b.dataset.newFormat)create('blank',b.dataset.newFormat);
 });
-window.addEventListener('hashchange',route);
+function isEditorFlow(hash,token){
+  const [page,id]=hash.replace(/^#\/?/,'').split('/');
+  return id===token&&['edit','preview','publish'].includes(page);
+}
+function confirmEditorExit(destination){
+  const session=editorSession;
+  if(!session)return;
+  const editLink=linkFor('edit',session.token);
+  const dialog=modal('Сохраните ссылку на черновик',`<p>Если уйти без ссылки для редактирования, вы потеряете доступ к черновику — он будет удалён.</p>
+    <input readonly value="${esc(editLink)}" aria-label="Ссылка для редактирования" />
+    <button type="button" class="btn primary wide" data-copy-edit-link>Скопировать ссылку</button>
+    <div class="row-wrap"><button type="button" class="btn light" data-stay-editor>Остаться</button><button type="button" class="btn danger" data-leave-editor>Уйти и удалить</button></div>`);
+  dialog.addEventListener('click',async event=>{
+    if(event.target.closest('[data-stay-editor]')){dialog.close();return;}
+    if(event.target.closest('[data-copy-edit-link]')){
+      await copy(editLink);
+      if(editorSession?.token===session.token)editorSession.linkCopied=true;
+      dialog.close();
+      return;
+    }
+    if(!event.target.closest('[data-leave-editor]'))return;
+    try{
+      await api.deleteProject(session.token);
+      editorSession=null;
+      dialog.close();
+      location.hash=destination||'#/';
+    }catch(error){toast(`Не удалось удалить черновик: ${error.message}`);}
+  });
+}
+function onHashChange(){
+  const destination=location.hash||'#/';
+  if(editorSession&&!editorSession.linkCopied&&!isEditorFlow(destination,editorSession.token)){
+    history.replaceState(null,'',`${location.pathname}${location.search}#/edit/${encodeURIComponent(editorSession.token)}`);
+    confirmEditorExit(destination);
+    return;
+  }
+  route();
+}
+window.addEventListener('hashchange',onHashChange);
+window.addEventListener('beforeunload',event=>{
+  if(!editorSession||editorSession.linkCopied)return;
+  event.preventDefault();
+  event.returnValue='';
+});
 route();

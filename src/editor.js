@@ -12,7 +12,7 @@ const FONT_OPTIONS=[['hand','От руки (Caveat)'],['round','Округлый
 
 const menu=[['templates','Шаблоны'],['text','Текст'],['images','Изображения'],['shapes','Элементы'],['background','Фоны'],['draw','Рисование'],['layers','Слои'],['audio','Аудио']];
 const formatOptions=p=>Object.keys(formats).map(f=>`<option value="${f}" ${p.format===f?'selected':''}>${f}</option>`).join('');
-export function mountEditor(root,token,p){
+export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDeleted=()=>{}}={}){
   let tool='templates',selected=null,zoom=1,scale=1,panX=0,panY=0,gesture=null,saveTimer=null,changeNumber=0,recording=null;
   let saveFlight=Promise.resolve();
   const mobile=matchMedia('(max-width:750px)').matches;
@@ -336,13 +336,13 @@ export function mountEditor(root,token,p){
     if(action==='redo' && redoStack.length){undoStack.push(snapshot());p=JSON.parse(redoStack.pop());dirty();selected=null;render();}
     if(action==='delete'){
       if(!confirm('Безвозвратно удалить проект, его опубликованные открытки и загруженные файлы? Отменить нельзя.'))return;
-      try{await api.deleteProject(token);location.hash='#/';toast('Открытка удалена');}
+      try{await api.deleteProject(token);onProjectDeleted();location.hash='#/';toast('Открытка удалена');}
       catch(err){toast(`Не удалось удалить: ${err.message}`);}
       return;
     }
     if(action==='link'){
       const m=modal('Ссылка для редактирования',`<p>Сохраните эту секретную ссылку. Любой, у кого она есть, сможет менять открытку.</p><input readonly value="${esc(linkFor('edit',token))}" /><button class="btn primary wide" id="copy-edit">Скопировать</button>`);
-      $('#copy-edit',m).onclick=()=>copy(linkFor('edit',token));
+      $('#copy-edit',m).onclick=async()=>{await copy(linkFor('edit',token));onEditLinkCopied();};
     }
     if(['preview','publish'].includes(action)){
       try{await flush();location.hash=`#/${action}/${token}`;}catch(err){toast(`Не удалось сохранить: ${err.message}`);}
