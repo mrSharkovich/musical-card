@@ -7,4 +7,6 @@ AGENTS.md
 CODEX.md
 .agents/
 .codex/
+.idea/
+.venv/
 backend/PLAN.md
