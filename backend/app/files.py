@@ -89,12 +89,15 @@ def _validate_audio(content: bytes, media_type: str) -> None:
             raise ValueError("Некорректный MP3-файл")
 
 
+class UploadTooLargeError(ValueError):
+    """Размер файла превышает допустимый лимит."""
+    pass
 def validate_upload(content: bytes) -> FileKind:
     kind = detect_file_kind(content)
     if not kind:
         raise ValueError("Поддерживаются JPEG, PNG, WebP, GIF и распространённые аудиоформаты")
     if len(content) > (MAX_IMAGE_BYTES if kind.is_image else MAX_AUDIO_BYTES):
-        raise ValueError("Файл превышает допустимый размер")
+        raise UploadTooLargeError("Файл превышает допустимый размер")
     if kind.is_image:
         _validate_image(content, kind.media_type)
     else:

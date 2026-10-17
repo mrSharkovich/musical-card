@@ -17,7 +17,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, compress_image_losslessly, validate_upload
+from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, compress_image_losslessly, validate_upload, UploadTooLargeError
 from .moderation import moderate_image
 from .schemas import EditTokenResponse, OkResponse, ProjectRequest, PublicIdResponse, PublishRequest
 from .storage import FileStorage, QuotaExceeded, project_asset_ids, public_media_urls, private_media_urls
@@ -266,6 +266,8 @@ async def upload_asset(file: UploadFile = File(...), edit_token: str = Form(...)
     content = b"".join(chunks)
     try:
         kind = validate_upload(content)
+    except UploadTooLargeError as error:
+        raise HTTPException(status_code=413, detail=str(error)) from error
     except ValueError as error:
         raise HTTPException(status_code=415, detail=str(error)) from error
     moderation = None
