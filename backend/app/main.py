@@ -17,7 +17,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, validate_upload
+from .files import MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, compress_image_losslessly, validate_upload
 from .moderation import moderate_image
 from .schemas import EditTokenResponse, OkResponse, ProjectRequest, PublicIdResponse, PublishRequest
 from .storage import FileStorage, QuotaExceeded, project_asset_ids, public_media_urls, private_media_urls
@@ -53,7 +53,7 @@ def ensure_catalog() -> None:
 
 # Reject oversized request bodies while streaming, before Starlette parses multipart.
 # Allow a little multipart overhead around the maximum supported audio file.
-MAX_REQUEST_BYTES = MAX_AUDIO_BYTES + 256 * 1024
+MAX_REQUEST_BYTES = max(MAX_IMAGE_BYTES, MAX_AUDIO_BYTES) + 256 * 1024
 MAX_PROJECT_REQUEST_BYTES = 300 * 1024
 
 
@@ -273,6 +273,7 @@ async def upload_asset(file: UploadFile = File(...), edit_token: str = Form(...)
         moderation = await moderate_image(content, kind.media_type)
         if moderation.flagged:
             raise HTTPException(status_code=422, detail="Файл не загружен: он содержит запрещённые материалы.")
+        content = compress_image_losslessly(content, kind)
     asset_id = token()
     try:
         storage.save_asset(asset_id, content, file.filename or "upload", kind.media_type, owner=edit_token)
