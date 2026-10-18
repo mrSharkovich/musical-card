@@ -241,6 +241,15 @@ async def main() -> int:
             await page.wait_for_selector("#audio-panel:not(.is-playing)")
 
             await page.locator('[data-audio="record"]').first.click()
+            capture = await page.locator("#modal-voice").get_attribute("capture")
+            c.ok(capture is None, "выбор аудио остаётся обычной загрузкой файла")
+            await page.set_input_files("#modal-voice", str(files / "voice.wav"))
+            await page.wait_for_selector("#dialog-overlay", state="detached", timeout=10000)
+            await saved(page)
+            _, p = await project(page)
+            c.ok(p["voice"]["name"] == "voice.wav", "файл из окна записи сохранён как голос")
+
+            await page.locator('[data-audio="record"]').first.click()
             await page.click("#rec-start")
             await page.wait_for_selector("#rec-start.live")
             await page.wait_for_timeout(1600)

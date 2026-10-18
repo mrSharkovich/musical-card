@@ -421,6 +421,8 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
   async function voiceDialog(){
     if(!(await confirmVoiceRights()))return;
     let timer=null,stream=null,cancelled=false;
+    const browserRecordingAvailable=window.isSecureContext&&!!navigator.mediaDevices?.getUserMedia&&!!window.MediaRecorder;
+    const recordingUnavailable=()=>modal('Запись голоса недоступна',`<p>Откройте на устройстве приложение «Диктофон» или «Запись голоса», запишите поздравление, затем вернитесь на сайт и выберите сохранённый файл кнопкой «Выбрать аудиофайл».</p><button type="button" class="btn primary wide" data-close>Понятно</button>`);
     const stopTimer=()=>{clearInterval(timer);timer=null;};
     const m=modal('Голосовое поздравление',`<div class="rec-box">
       <button type="button" class="rec-button" id="rec-start" aria-label="Начать запись">${icon('mic',40)}</button>
@@ -428,7 +430,6 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       <p class="rec-status" id="rec-status" aria-live="polite">нажмите на микрофон и говорите</p>
       <div class="rec-actions"><button type="button" class="btn light" id="rec-stop" disabled>${icon('stopFill',16)}Остановить и сохранить</button></div>
     </div>
-    <p class="muted small">Для записи с микрофона нужен HTTPS или localhost. Можно загрузить готовую запись — аудиофайл до ${MAX_AUDIO_MB} МБ.</p>
     <label class="btn light wide upload-label">${icon('upload',17)}Выбрать аудиофайл<input type="file" id="modal-voice" accept="audio/*" hidden></label>`,
     {onClose:()=>{
       stopTimer();
@@ -436,12 +437,15 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
       if(recording?.state==='recording'){cancelled=true;recording.stop();}
       stream?.getTracks().forEach(t=>t.stop());
     }});
-    const startBtn=$('#rec-start',m),stopBtn=$('#rec-stop',m),status=$('#rec-status',m),time=$('#rec-time',m);
-    $('#modal-voice',m).onchange=async e=>{await handleFile(e.target.files[0],'voice',true);m.close();};
+    const startBtn=$('#rec-start',m),stopBtn=$('#rec-stop',m),status=$('#rec-status',m),time=$('#rec-time',m),voiceFile=$('#modal-voice',m);
+    voiceFile.onchange=async e=>{await handleFile(e.target.files[0],'voice',true);m.close();};
     const stop=()=>{if(recording?.state==='recording'){recording.stop();status.textContent='сохраняем…';}stopBtn.disabled=true;stopTimer();startBtn.classList.remove('live');};
     startBtn.onclick=async()=>{
       if(recording?.state==='recording')return stop();
-      if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)return toast('Запись недоступна: используйте HTTPS или загрузите файл');
+      if(!browserRecordingAvailable){
+        recordingUnavailable();
+        return;
+      }
       try{
         stream=await navigator.mediaDevices.getUserMedia({audio:true});
         if(!m.isConnected){stream.getTracks().forEach(t=>t.stop());return;}
@@ -459,7 +463,7 @@ export function mountEditor(root,token,p,{onEditLinkCopied=()=>{},onProjectDelet
         timer=setInterval(()=>{const sec=Math.floor((Date.now()-startedAt)/1000);time.textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;},250);
         startBtn.classList.add('live');startBtn.setAttribute('aria-label','Остановить запись');startBtn.innerHTML=icon('stopFill',38);
         stopBtn.disabled=false;status.textContent='идёт запись… говорите';
-      }catch(err){toast(`Микрофон: ${err.message}`);}
+      }catch{recordingUnavailable();}
     };
     stopBtn.onclick=stop;
   }
